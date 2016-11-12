@@ -1,0 +1,33 @@
+Newbiecontest FileSystem
+========================
+
+Packages nécessaires
+--------------------
+fuse
+python-fuse
+python-request
+lxml
+
+Utilisation
+-----------
+Lancer avec :
+$ mkdir newbiecontest
+$ ./newbiecontest-fuse.py newbiecontest
+
+Et explorer le répertoire 'newbiecontest'.
+
+Pour avoir la liste complète des options de fuse :
+./newbiecontest-fuse.py --help
+
+Pour arrêter :
+fusermount -u newbiecontest
+
+Fichiers
+--------
+ * /username et /password
+	Les fichiers username et password peuvent être écrits pour indiquer les
+	informations d'authentification pour le site.
+
+ * /deauth
+	Si une valeur numérique différente de 0 est écrite dans le fichier
+	deauth, l'utilisateur sera déconnecté du site.
