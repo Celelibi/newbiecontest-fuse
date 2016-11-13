@@ -8,6 +8,9 @@ python-fuse
 python-request
 lxml
 
+Optionels:
+python-html2text
+
 Utilisation
 -----------
 Lancer avec :
@@ -31,3 +34,7 @@ Fichiers
  * /deauth
 	Si une valeur numérique différente de 0 est écrite dans le fichier
 	deauth, l'utilisateur sera déconnecté du site.
+
+ * /news/*
+	Contient les news en page d'accueil du site. Si le module python
+	html2text est disponible, un rendu HTML basique est disponible.
