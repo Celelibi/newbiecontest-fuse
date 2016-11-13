@@ -75,6 +75,103 @@ class File(object):
         return self._content
 
 
+class Directory(object):
+    def __init__(self, name, isWritable = True):
+        self.stat = DirStat()
+        if isWritable:
+            self.stat.st_mode |= 0220
+        self.name = name
+        self._files = {}
+
+    @property
+    def files(self):
+        self.stat.st_atime = int(time.time())
+        return self._files
+
+    @files.setter
+    def files(self, files):
+        self._files = files
+        self.stat.st_size = len(files)
+        self.stat.touch()
+        return self._files
+
+
+
+class Challenges(object):
+    challpath = "/challenges"
+    urlcat = "index.php?page=challenges"
+    cachelife = 60
+
+
+    class Category(object):
+        def __init__(self, name, link = None):
+            self.name = name
+            self.link = link
+            self.dir = Directory(name)
+
+
+    def __init__(self, req):
+        self.req = req
+        self.catdirs = None
+        self.catexpir = None
+
+
+    def handledpath(self):
+        return [self.challpath]
+
+
+    def _getcategories(self):
+        now = time.time()
+        if self.catdirs is not None and self.catexpir > now:
+            return
+
+        res = self.req.get(self.urlcat)
+        doc = lxml.html.fromstring(res.content, base_url = res.url)
+        tables = doc.cssselect('div#content > div.textpad > table')
+
+        if len(tables) != 3:
+            raise ParsingException()
+
+        self.catdirs = {}
+
+        # Categories are linked in the first table
+        tablecat = tables[0]
+        for link in tablecat.cssselect('tr strong a'):
+            caturl = link.get('href')
+            catname = lxml.html.tostring(link, encoding = 'utf-8', method = 'text').strip()
+
+            if not catname.startswith('Épreuves '):
+                continue
+
+            catname = catname[len('Épreuves '):]
+            self.catdirs[self.challpath + "/" + catname] = self.Category(catname, caturl)
+
+        self.catexpir = now + self.cachelife
+
+
+    def getattr(self, path):
+        self._getcategories()
+
+        if path == self.challpath:
+            st = DirStat()
+            st.st_nlink += len(self.catdirs)
+            return st
+        elif path in self.catdirs:
+            return self.catdirs[path].dir.stat
+        else:
+            return -errno.ENOENT
+
+
+    def readdir(self, path, offset):
+        self._getcategories()
+
+        yield fuse.Direntry(".")
+        yield fuse.Direntry("..")
+        for f in self.catdirs.values():
+            yield fuse.Direntry(f.name)
+
+
+
 class News(object):
     newspath = "/news"
     urlnews = "index.php?page=news"
@@ -381,7 +478,7 @@ def main():
     usage += NewbiecontestFS.fusage
 
     req = Requests()
-    modules = [req, News(req)]
+    modules = [req, News(req), Challenges(req)]
     server = NewbiecontestFS(modules, usage = usage)
     server.parse(errex = 1)
     server.main()

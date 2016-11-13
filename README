@@ -38,3 +38,6 @@ Fichiers
  * /news/*
 	Contient les news en page d'accueil du site. Si le module python
 	html2text est disponible, un rendu HTML basique est disponible.
+
+ * /challenges
+	Contient un répertoire par catégorie de challenge.
