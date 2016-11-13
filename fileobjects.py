@@ -42,7 +42,7 @@ class FileStat(DefaultStat):
 
 
 class File(object):
-    def __init__(self, name, isWritable = True, content = b''):
+    def __init__(self, name, isWritable = False, content = b''):
         self.stat = FileStat()
         if isWritable:
             self.stat.st_mode |= 0220

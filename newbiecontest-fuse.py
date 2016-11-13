@@ -143,7 +143,7 @@ class News(object):
             # Build a File object
             titletext = title.text
             titletext = titletext.strip().replace('/', '_')
-            news = fo.File(titletext, isWritable = False)
+            news = fo.File(titletext)
 
             # Try to render the html
             try:
@@ -224,9 +224,9 @@ class Requests(object):
         self.cookies = None
         self.files = {}
 
-        uf = fo.File("username")
-        pf = fo.File("password", content = b"<password is write-only>\n")
-        df = fo.File("deauth", content = b"Write 1 to this file to logout\n")
+        uf = fo.File("username", isWritable = True)
+        pf = fo.File("password", isWritable = True, content = b"<password is write-only>\n")
+        df = fo.File("deauth", isWritable = True, content = b"Write 1 to this file to logout\n")
 
         for f in [uf, pf, df]:
             path = "/" + f.name
