@@ -64,7 +64,7 @@ class File(object):
 
 
 class Directory(object):
-    def __init__(self, name, isWritable = True):
+    def __init__(self, name, isWritable = False):
         self.stat = DirStat()
         if isWritable:
             self.stat.st_mode |= 0220
