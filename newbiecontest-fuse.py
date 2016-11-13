@@ -2,15 +2,14 @@
 # coding: utf-8
 
 import os
-import sys
 import errno
-import stat
 import time
 import re
 import fuse
 import requests
 import lxml.html
 
+import fileobjects as fo
 
 fuse.fuse_python_api = (0, 2)
 
@@ -20,80 +19,6 @@ class AuthException(BaseException):
 
 class ParsingException(BaseException):
     pass
-
-
-class DefaultStat(fuse.Stat):
-    def __init__(self, *args, **kwargs):
-        super(DefaultStat, self).__init__(*args, **kwargs)
-        # These fields are purely cosmetic
-        self.st_uid = os.getuid()
-        self.st_gid = os.getgid()
-        self.st_atime = int(time.time())
-        self.st_mtime = self.st_atime
-        self.st_ctime = self.st_atime
-
-    def touch(self):
-        self.st_atime = int(time.time())
-        self.st_mtime = self.st_atime
-
-
-class DirStat(DefaultStat):
-    def __init__(self, *args, **kwargs):
-        super(DirStat, self).__init__(*args, **kwargs)
-        # Those two fields are require
-        self.st_mode = stat.S_IFDIR | 0555
-        self.st_nlink = 2
-
-
-class FileStat(DefaultStat):
-    def __init__(self, *args, **kwargs):
-        super(FileStat, self).__init__(*args, **kwargs)
-        # Those two fields are require
-        self.st_mode = stat.S_IFREG | 0444
-        self.st_nlink = 1
-
-
-class File(object):
-    def __init__(self, name, isWritable = True, content = b''):
-        self.stat = FileStat()
-        if isWritable:
-            self.stat.st_mode |= 0220
-        self.name = name
-        self._content = content
-        self.stat.st_size = len(content)
-
-    @property
-    def content(self):
-        self.stat.st_atime = int(time.time())
-        return self._content
-
-    @content.setter
-    def content(self, content):
-        self._content = content
-        self.stat.st_size = len(content)
-        self.stat.touch()
-        return self._content
-
-
-class Directory(object):
-    def __init__(self, name, isWritable = True):
-        self.stat = DirStat()
-        if isWritable:
-            self.stat.st_mode |= 0220
-        self.name = name
-        self._files = {}
-
-    @property
-    def files(self):
-        self.stat.st_atime = int(time.time())
-        return self._files
-
-    @files.setter
-    def files(self, files):
-        self._files = files
-        self.stat.st_size = len(files)
-        self.stat.touch()
-        return self._files
 
 
 
@@ -107,7 +32,7 @@ class Challenges(object):
         def __init__(self, name, link = None):
             self.name = name
             self.link = link
-            self.dir = Directory(name)
+            self.dir = fo.Directory(name)
 
 
     def __init__(self, req):
@@ -153,7 +78,7 @@ class Challenges(object):
         self._getcategories()
 
         if path == self.challpath:
-            st = DirStat()
+            st = fo.DirStat()
             st.st_nlink += len(self.catdirs)
             return st
         elif path in self.catdirs:
@@ -218,7 +143,7 @@ class News(object):
             # Build a File object
             titletext = title.text
             titletext = titletext.strip().replace('/', '_')
-            news = File(titletext, isWritable = False)
+            news = fo.File(titletext, isWritable = False)
 
             # Try to render the html
             try:
@@ -251,7 +176,7 @@ class News(object):
     def getattr(self, path):
         self._getnews()
         if path == self.newspath:
-            return DirStat()
+            return fo.DirStat()
         elif path in self.newslist:
             return self.newslist[path].stat
         else:
@@ -299,9 +224,9 @@ class Requests(object):
         self.cookies = None
         self.files = {}
 
-        uf = File("username")
-        pf = File("password", content = b"<password is write-only>\n")
-        df = File("deauth", content = b"Write 1 to this file to logout\n")
+        uf = fo.File("username")
+        pf = fo.File("password", content = b"<password is write-only>\n")
+        df = fo.File("deauth", content = b"Write 1 to this file to logout\n")
 
         for f in [uf, pf, df]:
             path = "/" + f.name
@@ -421,7 +346,7 @@ class NewbiecontestFS(fuse.Fuse):
         prefix = self.pathprefix(path)
 
         if path == "/":
-            return DirStat()
+            return fo.DirStat()
         elif prefix in self.pathmodule:
             return self.pathmodule[prefix].getattr(path)
 
