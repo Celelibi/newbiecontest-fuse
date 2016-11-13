@@ -17,10 +17,6 @@ fuse.fuse_python_api = (0, 2)
 class AuthException(BaseException):
     pass
 
-class ParsingException(BaseException):
-    pass
-
-
 
 class Challenges(object):
     challpath = "/challenges"
