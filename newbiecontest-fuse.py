@@ -198,11 +198,21 @@ class NewbiecontestFS(fuse.Fuse):
                 self.pathmodule[p] = m
 
 
+    @staticmethod
+    def pathprefix(path):
+        secondslashidx = path.find("/", 1)
+        if secondslashidx == -1:
+            secondslashidx = len(path)
+        return path[:secondslashidx]
+
+
     def getattr(self, path):
+        prefix = self.pathprefix(path)
+
         if path == "/":
             return DirStat()
-        elif path in self.pathmodule:
-            return self.pathmodule[path].getattr(path)
+        elif prefix in self.pathmodule:
+            return self.pathmodule[prefix].getattr(path)
 
         return -errno.ENOENT
 
@@ -215,34 +225,40 @@ class NewbiecontestFS(fuse.Fuse):
             for name in self.pathmodule.keys():
                 yield fuse.Direntry(name[1:])
 
+        prefix = self.pathprefix(path)
+
         if path == "/":
             return rootreaddir()
-        elif path in self.pathmodule:
-            return self.pathmodule[path].readdir(path, offset)
+        elif prefix in self.pathmodule:
+            return self.pathmodule[prefix].readdir(path, offset)
         else:
             return -errno.ENOENT
 
 
     def open(self, path, *args, **kwargs):
-        if path in self.pathmodule:
-            return self.pathmodule[path].open(path, *args, **kwargs)
+        prefix = self.pathprefix(path)
+        if prefix in self.pathmodule:
+            return self.pathmodule[prefix].open(path, *args, **kwargs)
 
         return -errno.ENOENT
 
 
     def read(self, path, *args, **kwargs):
-        if path in self.pathmodule:
-            return self.pathmodule[path].read(path, *args, **kwargs)
+        prefix = self.pathprefix(path)
+        if prefix in self.pathmodule:
+            return self.pathmodule[prefix].read(path, *args, **kwargs)
 
 
     def write(self, path, *args, **kwargs):
-        if path in self.pathmodule:
-            return self.pathmodule[path].write(path, *args, **kwargs)
+        prefix = self.pathprefix(path)
+        if prefix in self.pathmodule:
+            return self.pathmodule[prefix].write(path, *args, **kwargs)
 
 
     def truncate(self, path, *args, **kwargs):
-        if path in self.pathmodule:
-            return self.pathmodule[path].truncate(path, *args, **kwargs)
+        prefix = self.pathprefix(path)
+        if prefix in self.pathmodule:
+            return self.pathmodule[prefix].truncate(path, *args, **kwargs)
 
 
 
