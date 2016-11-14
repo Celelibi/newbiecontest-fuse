@@ -14,12 +14,14 @@ fuse.fuse_python_api = (0, 2)
 
 
 class NewbiecontestFS(fuse.Fuse):
-    def __init__(self, modules = [], *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         super(NewbiecontestFS, self).__init__(*args, **kwargs)
-        self.modules = modules
         self.pathmodule = {}
 
-        for m in modules:
+        req = authrequests.AuthRequests()
+        self.modules = [req, news.News(req), challenges.Challenges(req)]
+
+        for m in self.modules:
             for p in m.handledpath():
                 self.pathmodule[p] = m
 
@@ -92,9 +94,7 @@ def main():
     usage = "Newbiecontest File System\n\n"
     usage += NewbiecontestFS.fusage
 
-    req = authrequests.AuthRequests()
-    modules = [req, news.News(req), challenges.Challenges(req)]
-    server = NewbiecontestFS(modules, usage = usage)
+    server = NewbiecontestFS(usage = usage)
     server.parse(errex = 1)
     server.main()
 
