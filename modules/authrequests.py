@@ -73,23 +73,17 @@ class FileDeauth(fo.File):
 
 
 
-class AuthRequests(object):
-    """Make all the requests through and manage the authentication and cookies.
+class Auth(object):
+    """This class is responsible for the virtual files /username, /password and
+    /deauth."""
 
-    This class is responsible for the virtual files /username and /password."""
-
-    urlbase = "https://www.newbiecontest.org/"
-    urlauth = "forums/index.php?action=login2"
-
-    def __init__(self):
-        self.username = ''
-        self.password = ''
-        self.cookies = None
+    def __init__(self, req):
+        self.req = req
         self.files = {}
 
-        uf = FileUsername("username", self)
-        pf = FilePassword("password", self)
-        df = FileDeauth("deauth", self)
+        uf = FileUsername("username", req)
+        pf = FilePassword("password", req)
+        df = FileDeauth("deauth", req)
 
         for f in [uf, pf, df]:
             path = "/" + f.name
@@ -98,6 +92,44 @@ class AuthRequests(object):
 
     def handledpath(self):
         return self.files.keys()
+
+
+    def getattr(self, path):
+        return self.files[path].stat
+
+
+    def open(self, path, flags):
+        if path not in self.files:
+            # Should not happen
+            return -errno.ENOENT
+
+        return None
+
+
+    def read(self, path, size, offset):
+        return self.files[path].content[offset:offset+size]
+
+
+    def write(self, path, buf, offset):
+        self.files[path].content = bytes(buf)
+        return len(buf)
+
+
+    def truncate(self, path, length):
+        self.files[path].truncate(length)
+
+
+
+class AuthRequests(object):
+    """Make all the requests through and manage the authentication and cookies."""
+
+    urlbase = "https://www.newbiecontest.org/"
+    urlauth = "forums/index.php?action=login2"
+
+    def __init__(self):
+        self.username = ''
+        self.password = ''
+        self.cookies = None
 
 
     def get(self, url, **kwargs):
@@ -126,28 +158,3 @@ class AuthRequests(object):
 
     def deauth(self):
         self.cookies = None
-
-
-    def getattr(self, path):
-        return self.files[path].stat
-
-
-    def open(self, path, flags):
-        if path not in self.files:
-            # Should not happen
-            return -errno.ENOENT
-
-        return None
-
-
-    def read(self, path, size, offset):
-        return self.files[path].content[offset:offset+size]
-
-
-    def write(self, path, buf, offset):
-        self.files[path].content = bytes(buf)
-        return len(buf)
-
-
-    def truncate(self, path, length):
-        self.files[path].truncate(length)

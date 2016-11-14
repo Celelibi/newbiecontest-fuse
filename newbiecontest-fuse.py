@@ -19,7 +19,11 @@ class NewbiecontestFS(fuse.Fuse):
         self.pathmodule = {}
 
         req = authrequests.AuthRequests()
-        self.modules = [req, news.News(req), challenges.Challenges(req)]
+        self.modules = [
+                authrequests.Auth(req),
+                news.News(req),
+                challenges.Challenges(req)
+        ]
 
         for m in self.modules:
             for p in m.handledpath():
