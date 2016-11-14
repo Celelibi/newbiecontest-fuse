@@ -17,7 +17,7 @@ class AuthException(BaseException):
 
 
 
-class Requests(object):
+class AuthRequests(object):
     """Make all the requests through and manage the authentication and cookies.
 
     This class is responsible for the virtual files /username and /password."""
@@ -209,7 +209,7 @@ def main():
     usage = "Newbiecontest File System\n\n"
     usage += NewbiecontestFS.fusage
 
-    req = Requests()
+    req = AuthRequests()
     modules = [req, news.News(req), challenges.Challenges(req)]
     server = NewbiecontestFS(modules, usage = usage)
     server.parse(errex = 1)
