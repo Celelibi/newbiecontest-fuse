@@ -1,5 +1,6 @@
 # coding: utf-8
 
+import errno
 import requests
 
 import fileobjects as fo
@@ -8,6 +9,78 @@ import fileobjects as fo
 
 class AuthException(BaseException):
     pass
+
+
+
+# This is what truncate should do to the content
+def cutextend(s, size):
+    s = s[:size]
+    s += b'\0' * (size - len(s))
+    return s
+
+
+
+class FileUsername(fo.File):
+    def __init__(self, name, auth, **kwargs):
+        kwargs.setdefault('isWritable', True)
+        super(FileUsername, self).__init__(name, **kwargs)
+        self.auth = auth
+
+    @fo.File.content.setter
+    def content(self, val):
+        fo.File.content.fset(self, val)
+        # rstrip only for auth, not for the content of the file.
+        val = val.rstrip("\r\n")
+
+        if val != self.auth.username:
+            self.auth.deauth()
+            self.auth.username = val
+
+    def truncate(self, size):
+        self.content = cutextend(self.content, size)
+
+
+
+class FilePassword(fo.File):
+    def __init__(self, name, auth, **kwargs):
+        kwargs.setdefault('isWritable', True)
+        kwargs.setdefault('content', b"<password is write-only>\n")
+        super(FilePassword, self).__init__(name, **kwargs)
+        self.auth = auth
+
+    @fo.File.content.setter
+    def content(self, val):
+        # We don't actually modify the content, we just set the auth password
+        val = val.rstrip("\r\n")
+
+        if val != self.auth.password:
+            self.auth.deauth()
+            self.auth.password = val
+
+        self.stat.touch()
+
+    def truncate(self, size):
+        self.content = cutextend(self.auth.password, size)
+
+
+
+class FileDeauth(fo.File):
+    def __init__(self, name, auth, **kwargs):
+        kwargs.setdefault('isWritable', True)
+        kwargs.setdefault('content', b"<Write 1 to this file to logout>\n")
+        super(FileDeauth, self).__init__(name, **kwargs)
+        self.auth = auth
+
+    @fo.File.content.setter
+    def content(self, val):
+        try:
+            if int(val):
+                self.auth.deauth()
+        except ValueError:
+            pass
+
+    def truncate(self, size):
+        self.content = cutextend(b'', size)
 
 
 
@@ -25,9 +98,9 @@ class AuthRequests(object):
         self.cookies = None
         self.files = {}
 
-        uf = fo.File("username", isWritable = True)
-        pf = fo.File("password", isWritable = True, content = b"<password is write-only>\n")
-        df = fo.File("deauth", isWritable = True, content = b"Write 1 to this file to logout\n")
+        uf = FileUsername("username", self)
+        pf = FilePassword("password", self)
+        df = FileDeauth("deauth", self)
 
         for f in [uf, pf, df]:
             path = "/" + f.name
@@ -71,7 +144,11 @@ class AuthRequests(object):
 
 
     def open(self, path, flags):
-        pass
+        if path not in self.files:
+            # Should not happen
+            return -errno.ENOENT
+
+        return None
 
 
     def read(self, path, size, offset):
@@ -79,49 +156,9 @@ class AuthRequests(object):
 
 
     def write(self, path, buf, offset):
-        buflen = len(buf)
-        buf = buf.rstrip("\r\n")
-
-        if path == "/username":
-            self.files[path].content = bytes(buf + "\n")
-            if buf != self.username:
-                self.deauth()
-                self.username = buf
-            return buflen
-
-        elif path == "/password":
-            if buf != self.username:
-                self.deauth()
-                self.password = buf
-            return buflen
-
-        elif path == "/deauth":
-            if int(buf):
-                self.deauth()
-            return buflen
+        self.files[path].content = bytes(buf)
+        return len(buf)
 
 
     def truncate(self, path, length):
-        if path == "/username":
-            c = self.files[path].content
-            c = c[:length] + b"\0" * (length - len(c))
-            self.files[path].content = c
-
-            if c.rstrip("\r\n") != self.username:
-                self.deauth()
-                self.username = c.rstrip("\r\n")
-
-        elif path == "/password":
-            c = self.password
-            c = c[:length] + b"\0" * (length - len(c))
-
-            if c != self.password:
-                self.deauth()
-                self.password = c
-
-        elif path == "/deauth":
-            pass
-
-
-
-
+        self.files[path].truncate(length)
