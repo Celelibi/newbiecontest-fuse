@@ -99,7 +99,9 @@ class Auth(object):
 
 
     def getattr(self, path):
-        return self.files[path].stat
+        if path in self.files:
+            return self.files[path].stat
+        return -errno.ENOENT
 
 
     def open(self, path, flags):
