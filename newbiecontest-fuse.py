@@ -3,6 +3,7 @@
 
 import errno
 import fuse
+import itertools
 
 import fileobjects as fo
 import modules.news as news
@@ -84,17 +85,13 @@ class NewbiecontestFS(fuse.Fuse):
 
 
     def readdir(self, path, offset):
-        # Stupid trick because a single function can't both yield and return
-        def rootreaddir():
-            yield fuse.Direntry(".")
-            yield fuse.Direntry("..")
-            for name in self.pathmodule.keys():
-                yield fuse.Direntry(name[1:])
-
+        dotdot = [fuse.Direntry("."), fuse.Direntry("..")]
         prefix = self.pathprefix(path)
 
         if path == "/":
-            return rootreaddir()
+            dm = [fuse.Direntry(name[1:]) for name in self.dirmodules.keys()]
+            rm = [m.readdir(path, offset) for m in self.rootmodules]
+            return itertools.chain(dotdot, dm, *rm)
         elif prefix in self.pathmodule:
             return self.pathmodule[prefix].readdir(path, offset)
         else:
