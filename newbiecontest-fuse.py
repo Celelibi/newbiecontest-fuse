@@ -29,6 +29,13 @@ class NewbiecontestFS(fuse.Fuse):
             for p in m.handledpath():
                 self.pathmodule[p] = m
 
+        # Separate the modules rooted in / and those rooted in their own dir
+        self.rootmodules = [self.modules[0]]
+        self.dirmodules = {}
+        for p, m in self.pathmodule.items():
+            if m not in self.rootmodules:
+                self.dirmodules[p] = [m]
+
 
     @staticmethod
     def pathprefix(path):
