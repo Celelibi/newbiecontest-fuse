@@ -2,6 +2,7 @@
 
 import errno
 import requests
+import fuse
 
 import fileobjects as fo
 
@@ -102,6 +103,11 @@ class Auth(object):
         if path in self.files:
             return self.files[path].stat
         return -errno.ENOENT
+
+
+    def readdir(self, path, offset):
+        for f in self.files.values():
+            yield fuse.Direntry(f.name)
 
 
     def open(self, path, flags):
