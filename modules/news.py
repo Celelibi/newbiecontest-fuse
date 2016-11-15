@@ -88,6 +88,10 @@ class News(object):
         self.newsexpir = now + self.newslife
 
 
+    def getndirs(self):
+        return 0
+
+
     def getattr(self, path):
         self._getnews()
         if path == self.newspath:

@@ -94,6 +94,10 @@ class Auth(object):
         return self.files.keys()
 
 
+    def getndirs(self):
+        return 0
+
+
     def getattr(self, path):
         return self.files[path].stat
 

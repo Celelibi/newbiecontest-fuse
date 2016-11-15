@@ -62,6 +62,11 @@ class Challenges(object):
         self.catexpir = now + self.cachelife
 
 
+    def getndirs(self):
+        self._getcategories()
+        return len(self.catdirs)
+
+
     def getattr(self, path):
         self._getcategories()
 
