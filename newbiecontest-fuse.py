@@ -92,6 +92,9 @@ class NewbiecontestFS(fuse.Fuse):
             dm = [fuse.Direntry(name[1:]) for name in self.dirmodules.keys()]
             rm = [m.readdir(path, offset) for m in self.rootmodules]
             return itertools.chain(dotdot, dm, *rm)
+        elif path in self.dirmodules:
+            dm = [m.readdir(path, offset) for m in self.dirmodules[path]]
+            return itertools.chain(dotdot, *dm)
         elif prefix in self.pathmodule:
             return self.pathmodule[prefix].readdir(path, offset)
         else:

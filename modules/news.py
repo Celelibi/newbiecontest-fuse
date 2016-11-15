@@ -103,8 +103,6 @@ class News(object):
     def readdir(self, path, offset):
         self._getnews()
 
-        yield fuse.Direntry(".")
-        yield fuse.Direntry("..")
         for f in self.newslist.values():
             yield fuse.Direntry(f.name)
 

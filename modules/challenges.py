@@ -79,7 +79,5 @@ class Challenges(object):
     def readdir(self, path, offset):
         self._getcategories()
 
-        yield fuse.Direntry(".")
-        yield fuse.Direntry("..")
         for f in self.catdirs.values():
             yield fuse.Direntry(f.name)
