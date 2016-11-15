@@ -94,12 +94,10 @@ class News(object):
 
     def getattr(self, path):
         self._getnews()
-        if path == self.newspath:
-            return fo.DirStat()
-        elif path in self.newslist:
+        if path in self.newslist:
             return self.newslist[path].stat
-        else:
-            return -errno.ENOENT
+
+        return -errno.ENOENT
 
 
     def readdir(self, path, offset):
