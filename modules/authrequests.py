@@ -112,7 +112,6 @@ class Auth(object):
 
     def open(self, path, flags):
         if path not in self.files:
-            # Should not happen
             return -errno.ENOENT
 
         return None

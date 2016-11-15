@@ -115,7 +115,6 @@ class News(object):
         self._getnews()
 
         if path not in self.newslist:
-            # Should not happen because fuse always call getattr first
             return -errno.ENOENT
 
 
