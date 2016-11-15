@@ -49,9 +49,36 @@ class NewbiecontestFS(fuse.Fuse):
         prefix = self.pathprefix(path)
 
         if path == "/":
-            return fo.DirStat()
-        elif prefix in self.pathmodule:
-            return self.pathmodule[prefix].getattr(path)
+            # We just need to count the number of directories in /
+            st = fo.DirStat()
+            st.st_nlink += len(self.dirmodules)
+            for m in self.rootmodules:
+                st.st_nlink += m.getndirs()
+            return st
+
+        elif path in self.dirmodules:
+            # Asking for the attributes of a module directory
+            # Count the number of directories in /moduledir
+            st = fo.DirStat()
+            for m in self.dirmodules[path]:
+                st.st_nlink += m.getndirs()
+            return st
+
+        elif prefix in self.dirmodules:
+            # Asking for the attributes of something inside a module directory
+            # Delegate to all modules in /moduledir until one knows this file
+            for m in self.dirmodules[prefix]:
+                st = m.getattr(path)
+                if st != -errno.ENOENT:
+                    return st
+
+        else:
+            # Asking for the attributes of neither / or a module directory
+            # May be a file in a root module
+            for m in self.rootmodules:
+                st = m.getattr(path)
+                if st != -errno.ENOENT:
+                    return st
 
         return -errno.ENOENT
 
