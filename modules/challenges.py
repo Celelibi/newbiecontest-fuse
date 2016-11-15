@@ -70,14 +70,10 @@ class Challenges(object):
     def getattr(self, path):
         self._getcategories()
 
-        if path == self.challpath:
-            st = fo.DirStat()
-            st.st_nlink += len(self.catdirs)
-            return st
-        elif path in self.catdirs:
+        if path in self.catdirs:
             return self.catdirs[path].dir.stat
-        else:
-            return -errno.ENOENT
+
+        return -errno.ENOENT
 
 
     def readdir(self, path, offset):
