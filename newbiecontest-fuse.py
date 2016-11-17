@@ -36,6 +36,13 @@ class NewbiecontestFS(fuse.Fuse):
         return (path[:idx], path[idx+1:])
 
 
+    def modulepath(self, path):
+        (prefix, tail) = self.pathsplit(path)
+        if prefix in self.dirmodules:
+            return (self.dirmodules[prefix], tail)
+        return (self.rootmodules, path)
+
+
     def getattr(self, path):
         path = path[1:]
         (prefix, tail) = self.pathsplit(path)
