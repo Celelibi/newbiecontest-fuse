@@ -91,10 +91,6 @@ class Auth(object):
             self.files[path] = f
 
 
-    def handledpath(self):
-        return self.files.keys()
-
-
     def getndirs(self):
         return 0
 

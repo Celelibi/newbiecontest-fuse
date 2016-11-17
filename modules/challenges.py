@@ -29,10 +29,6 @@ class Challenges(object):
         self.catexpir = None
 
 
-    def handledpath(self):
-        return [self.challpath]
-
-
     def _getcategories(self):
         now = time.time()
         if self.catdirs is not None and self.catexpir > now:

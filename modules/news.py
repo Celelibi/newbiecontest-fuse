@@ -26,10 +26,6 @@ class News(object):
         self.newsexpir = None
 
 
-    def handledpath(self):
-        return [self.newspath]
-
-
     def _getnews(self):
         now = time.time()
         if self.newslist is not None and self.newsexpir > now:
