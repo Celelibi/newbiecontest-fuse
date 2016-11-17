@@ -144,8 +144,18 @@ class NewbiecontestFS(fuse.Fuse):
 
     def write(self, path, *args, **kwargs):
         prefix = self.pathprefix(path)
-        if prefix in self.pathmodule:
-            return self.pathmodule[prefix].write(path, *args, **kwargs)
+
+        if prefix in self.dirmodules:
+            mods = self.dirmodules[prefix]
+        else:
+            mods = self.rootmodules
+
+        for m in mods:
+            val = m.write(path, *args, **kwargs)
+            if val != -errno.ENOENT:
+                return val
+
+        return -errno.ENOENT
 
 
     def truncate(self, path, *args, **kwargs):
