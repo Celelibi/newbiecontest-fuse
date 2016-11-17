@@ -129,4 +129,6 @@ class News(object):
 
     def read(self, path, size, offset):
         self._getnews()
-        return self.newslist[path].content[offset:offset+size]
+        if path in self.newslist:
+            return self.newslist[path].content[offset:offset+size]
+        return -errno.ENOENT

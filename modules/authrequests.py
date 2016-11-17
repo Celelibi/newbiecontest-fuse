@@ -118,7 +118,9 @@ class Auth(object):
 
 
     def read(self, path, size, offset):
-        return self.files[path].content[offset:offset+size]
+        if path in self.files:
+            return self.files[path].content[offset:offset+size]
+        return -errno.ENOENT
 
 
     def write(self, path, buf, offset):
