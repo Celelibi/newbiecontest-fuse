@@ -29,15 +29,15 @@ class NewbiecontestFS(fuse.Fuse):
 
 
     @staticmethod
-    def pathprefix(path):
+    def pathsplit(path):
         secondslashidx = path.find("/", 1)
         if secondslashidx == -1:
             secondslashidx = len(path)
-        return path[:secondslashidx]
+        return (path[:secondslashidx], path[secondslashidx:])
 
 
     def getattr(self, path):
-        prefix = self.pathprefix(path)
+        (prefix, tail) = self.pathsplit(path)
 
         if path == "/":
             # We just need to count the number of directories in /
@@ -76,7 +76,7 @@ class NewbiecontestFS(fuse.Fuse):
 
     def readdir(self, path, offset):
         dotdot = [fuse.Direntry("."), fuse.Direntry("..")]
-        prefix = self.pathprefix(path)
+        (prefix, tail) = self.pathsplit(path)
 
         if path == "/":
             dm = [fuse.Direntry(name[1:]) for name in self.dirmodules.keys()]
@@ -101,7 +101,7 @@ class NewbiecontestFS(fuse.Fuse):
 
 
     def open(self, path, *args, **kwargs):
-        prefix = self.pathprefix(path)
+        (prefix, tail) = self.pathsplit(path)
 
         if prefix in self.dirmodules:
             mods = self.dirmodules[prefix]
@@ -117,7 +117,7 @@ class NewbiecontestFS(fuse.Fuse):
 
 
     def read(self, path, *args, **kwargs):
-        prefix = self.pathprefix(path)
+        (prefix, tail) = self.pathsplit(path)
 
         if prefix in self.dirmodules:
             mods = self.dirmodules[prefix]
@@ -133,7 +133,7 @@ class NewbiecontestFS(fuse.Fuse):
 
 
     def write(self, path, *args, **kwargs):
-        prefix = self.pathprefix(path)
+        (prefix, tail) = self.pathsplit(path)
 
         if prefix in self.dirmodules:
             mods = self.dirmodules[prefix]
@@ -149,7 +149,7 @@ class NewbiecontestFS(fuse.Fuse):
 
 
     def truncate(self, path, *args, **kwargs):
-        prefix = self.pathprefix(path)
+        (prefix, tail) = self.pathsplit(path)
 
         if prefix in self.dirmodules:
             mods = self.dirmodules[prefix]
