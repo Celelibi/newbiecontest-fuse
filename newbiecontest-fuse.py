@@ -89,18 +89,15 @@ class NewbiecontestFS(fuse.Fuse):
 
     def open(self, path, *args, **kwargs):
         path = path[1:]
-        (prefix, tail) = self.pathsplit(path)
+        (ms, tail) = self.modulepath(path)
 
-        if prefix in self.dirmodules:
-            for m in self.dirmodules[prefix]:
-                val = m.open(tail, *args, **kwargs)
-                if val != -errno.ENOENT:
-                    return val
-        else:
-            for m in self.rootmodules:
-                val = m.open(path, *args, **kwargs)
-                if val != -errno.ENOENT:
-                    return val
+        if tail == "":
+            return -errno.EISDIR
+
+        for m in ms:
+            val = m.open(tail, *args, **kwargs)
+            if val != -errno.ENOENT:
+                return val
 
         return -errno.ENOENT
 
