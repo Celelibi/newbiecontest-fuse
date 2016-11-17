@@ -45,37 +45,22 @@ class NewbiecontestFS(fuse.Fuse):
 
     def getattr(self, path):
         path = path[1:]
-        (prefix, tail) = self.pathsplit(path)
+        (ms, tail) = self.modulepath(path)
 
-        if path == "":
-            # We just need to count the number of directories in /
+        if tail == "":
+            # Asking for / or a dirmodule
             st = fo.DirStat()
-            st.st_nlink += len(self.dirmodules)
-            for m in self.rootmodules:
+            for m in ms:
                 st.st_nlink += m.getndirs()
-            return st
 
-        elif path in self.dirmodules:
-            # Asking for the attributes of a module directory
-            # Count the number of directories in /moduledir
-            st = fo.DirStat()
-            for m in self.dirmodules[path]:
-                st.st_nlink += m.getndirs()
+            if path == "":
+                st.st_nlink += len(self.dirmodules)
             return st
-
-        elif prefix in self.dirmodules:
-            # Asking for the attributes of something inside a module directory
-            # Delegate to all modules in /moduledir until one knows this file
-            for m in self.dirmodules[prefix]:
-                st = m.getattr(tail)
-                if st != -errno.ENOENT:
-                    return st
 
         else:
-            # Asking for the attributes of neither / or a module directory
-            # May be a file in a root module
-            for m in self.rootmodules:
-                st = m.getattr(path)
+            # Asking for a module's content
+            for m in ms:
+                st = m.getattr(tail)
                 if st != -errno.ENOENT:
                     return st
 
