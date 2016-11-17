@@ -88,7 +88,7 @@ class News(object):
             news.stat.st_ctime = news.stat.st_mtime
 
             # Add the File to the list
-            self.newslist["/" + news.name] = news
+            self.newslist[news.name] = news
         self.newsexpir = now + self.newslife
 
 

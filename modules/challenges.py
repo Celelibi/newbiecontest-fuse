@@ -52,7 +52,7 @@ class Challenges(object):
                 continue
 
             catname = catname[len('Épreuves '):]
-            self.catdirs["/" + catname] = self.Category(catname, caturl)
+            self.catdirs[catname] = self.Category(catname, caturl)
 
         self.catexpir = now + self.cachelife
 

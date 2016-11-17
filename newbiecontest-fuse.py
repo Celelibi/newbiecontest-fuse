@@ -24,22 +24,23 @@ class NewbiecontestFS(fuse.Fuse):
         req = authrequests.AuthRequests()
 
         self.rootmodules.append(authrequests.Auth(req))
-        self.dirmodules["/news"].append(news.News(req))
-        self.dirmodules["/challenges"].append(challenges.Challenges(req))
+        self.dirmodules["news"].append(news.News(req))
+        self.dirmodules["challenges"].append(challenges.Challenges(req))
 
 
     @staticmethod
     def pathsplit(path):
-        secondslashidx = path.find("/", 1)
-        if secondslashidx == -1:
-            secondslashidx = len(path)
-        return (path[:secondslashidx], path[secondslashidx:])
+        idx = path.find("/")
+        if idx == -1:
+            idx = len(path)
+        return (path[:idx], path[idx+1:])
 
 
     def getattr(self, path):
+        path = path[1:]
         (prefix, tail) = self.pathsplit(path)
 
-        if path == "/":
+        if path == "":
             # We just need to count the number of directories in /
             st = fo.DirStat()
             st.st_nlink += len(self.dirmodules)
@@ -76,10 +77,11 @@ class NewbiecontestFS(fuse.Fuse):
 
     def readdir(self, path, offset):
         dotdot = [fuse.Direntry("."), fuse.Direntry("..")]
+        path = path[1:]
         (prefix, tail) = self.pathsplit(path)
 
-        if path == "/":
-            dm = [fuse.Direntry(name[1:]) for name in self.dirmodules.keys()]
+        if path == "":
+            dm = [fuse.Direntry(name) for name in self.dirmodules.keys()]
             rm = [m.readdir(path, offset) for m in self.rootmodules]
             return itertools.chain(dotdot, dm, *rm)
 
@@ -102,6 +104,7 @@ class NewbiecontestFS(fuse.Fuse):
 
 
     def open(self, path, *args, **kwargs):
+        path = path[1:]
         (prefix, tail) = self.pathsplit(path)
 
         if prefix in self.dirmodules:
@@ -119,6 +122,7 @@ class NewbiecontestFS(fuse.Fuse):
 
 
     def read(self, path, *args, **kwargs):
+        path = path[1:]
         (prefix, tail) = self.pathsplit(path)
 
         if prefix in self.dirmodules:
@@ -136,6 +140,7 @@ class NewbiecontestFS(fuse.Fuse):
 
 
     def write(self, path, *args, **kwargs):
+        path = path[1:]
         (prefix, tail) = self.pathsplit(path)
 
         if prefix in self.dirmodules:
@@ -153,6 +158,7 @@ class NewbiecontestFS(fuse.Fuse):
 
 
     def truncate(self, path, *args, **kwargs):
+        path = path[1:]
         (prefix, tail) = self.pathsplit(path)
 
         if prefix in self.dirmodules:

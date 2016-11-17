@@ -87,8 +87,7 @@ class Auth(object):
         df = FileDeauth("deauth", req)
 
         for f in [uf, pf, df]:
-            path = "/" + f.name
-            self.files[path] = f
+            self.files[f.name] = f
 
 
     def getndirs(self):
