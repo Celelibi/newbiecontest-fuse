@@ -14,7 +14,6 @@ from . import ParsingException
 
 
 class News(object):
-    newspath = "/news"
     urlnews = "index.php?page=news"
     newslife = 60
     datere = re.compile('^(\d+ \d+ \d+ à \d+:\d+:\d+)')
@@ -89,7 +88,7 @@ class News(object):
             news.stat.st_ctime = news.stat.st_mtime
 
             # Add the File to the list
-            self.newslist[self.newspath + "/" + news.name] = news
+            self.newslist["/" + news.name] = news
         self.newsexpir = now + self.newslife
 
 

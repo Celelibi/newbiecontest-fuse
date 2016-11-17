@@ -59,7 +59,7 @@ class NewbiecontestFS(fuse.Fuse):
             # Asking for the attributes of something inside a module directory
             # Delegate to all modules in /moduledir until one knows this file
             for m in self.dirmodules[prefix]:
-                st = m.getattr(path)
+                st = m.getattr(tail)
                 if st != -errno.ENOENT:
                     return st
 
@@ -84,18 +84,19 @@ class NewbiecontestFS(fuse.Fuse):
             return itertools.chain(dotdot, dm, *rm)
 
         elif path in self.dirmodules:
-            dm = [m.readdir(path, offset) for m in self.dirmodules[path]]
+            dm = [m.readdir(tail, offset) for m in self.dirmodules[path]]
             return itertools.chain(dotdot, *dm)
 
         elif prefix in self.dirmodules:
-            mods = self.dirmodules[prefix]
+            for m in self.dirmodules[prefix]:
+                g = m.readdir(tail, offset)
+                if g != -errno.ENOENT:
+                    return g
         else:
-            mods = self.rootmodules
-
-        for m in mods:
-            g = m.readdir(path, offset)
-            if g != -errno.ENOENT:
-                return g
+            for m in self.rootmodules:
+                g = m.readdir(path, offset)
+                if g != -errno.ENOENT:
+                    return g
 
         return -errno.ENOENT
 
@@ -104,14 +105,15 @@ class NewbiecontestFS(fuse.Fuse):
         (prefix, tail) = self.pathsplit(path)
 
         if prefix in self.dirmodules:
-            mods = self.dirmodules[prefix]
+            for m in self.dirmodules[prefix]:
+                val = m.open(tail, *args, **kwargs)
+                if val != -errno.ENOENT:
+                    return val
         else:
-            mods = self.rootmodules
-
-        for m in mods:
-            val = m.open(path, *args, **kwargs)
-            if val != -errno.ENOENT:
-                return val
+            for m in self.rootmodules:
+                val = m.open(path, *args, **kwargs)
+                if val != -errno.ENOENT:
+                    return val
 
         return -errno.ENOENT
 
@@ -120,14 +122,15 @@ class NewbiecontestFS(fuse.Fuse):
         (prefix, tail) = self.pathsplit(path)
 
         if prefix in self.dirmodules:
-            mods = self.dirmodules[prefix]
+            for m in self.dirmodules[prefix]:
+                val = m.read(tail, *args, **kwargs)
+                if val != -errno.ENOENT:
+                    return val
         else:
-            mods = self.rootmodules
-
-        for m in mods:
-            val = m.read(path, *args, **kwargs)
-            if val != -errno.ENOENT:
-                return val
+            for m in self.rootmodules:
+                val = m.read(path, *args, **kwargs)
+                if val != -errno.ENOENT:
+                    return val
 
         return -errno.ENOENT
 
@@ -136,14 +139,15 @@ class NewbiecontestFS(fuse.Fuse):
         (prefix, tail) = self.pathsplit(path)
 
         if prefix in self.dirmodules:
-            mods = self.dirmodules[prefix]
+            for m in self.dirmodules[prefix]:
+                val = m.write(tail, *args, **kwargs)
+                if val != -errno.ENOENT:
+                    return val
         else:
-            mods = self.rootmodules
-
-        for m in mods:
-            val = m.write(path, *args, **kwargs)
-            if val != -errno.ENOENT:
-                return val
+            for m in self.rootmodules:
+                val = m.write(path, *args, **kwargs)
+                if val != -errno.ENOENT:
+                    return val
 
         return -errno.ENOENT
 
@@ -152,14 +156,15 @@ class NewbiecontestFS(fuse.Fuse):
         (prefix, tail) = self.pathsplit(path)
 
         if prefix in self.dirmodules:
-            mods = self.dirmodules[prefix]
+            for m in self.dirmodules[prefix]:
+                val = m.truncate(tail, *args, **kwargs)
+                if val != -errno.ENOENT:
+                    return val
         else:
-            mods = self.rootmodules
-
-        for m in mods:
-            val = m.truncate(path, *args, **kwargs)
-            if val != -errno.ENOENT:
-                return val
+            for m in self.rootmodules:
+                val = m.truncate(path, *args, **kwargs)
+                if val != -errno.ENOENT:
+                    return val
 
         return -errno.ENOENT
 

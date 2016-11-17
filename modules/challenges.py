@@ -11,7 +11,6 @@ from . import ParsingException
 
 
 class Challenges(object):
-    challpath = "/challenges"
     urlcat = "index.php?page=challenges"
     cachelife = 60
 
@@ -53,7 +52,7 @@ class Challenges(object):
                 continue
 
             catname = catname[len('Épreuves '):]
-            self.catdirs[self.challpath + "/" + catname] = self.Category(catname, caturl)
+            self.catdirs["/" + catname] = self.Category(catname, caturl)
 
         self.catexpir = now + self.cachelife
 
