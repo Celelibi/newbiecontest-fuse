@@ -75,6 +75,14 @@ class News(object):
             for a, n in monthdict.items():
                 date = date.replace(a, n)
 
+            # Replace "Aujourd'hui" and "Hier" with the date
+            if date.startswith("Aujourd'hui"):
+                today = datetime.date.today()
+                date = date.replace("Aujourd'hui", today.strftime("%d %m %Y"))
+            if date.startswith('Hier'):
+                ystdy = datetime.date.today() - datetime.timedelta(days = 1)
+                date = date.replace('Hier', ystdy.strftime("%d %m %Y"))
+
             match = self.datere.match(date)
             if match is None:
                 raise ParsingException()
