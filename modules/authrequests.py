@@ -124,8 +124,10 @@ class Auth(object):
 
 
     def write(self, path, buf, offset):
-        self.files[path].content = bytes(buf)
-        return len(buf)
+        if path in self.files:
+            self.files[path].content = bytes(buf)
+            return len(buf)
+        return -errno.ENOENT
 
 
     def truncate(self, path, length):
