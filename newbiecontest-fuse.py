@@ -104,18 +104,12 @@ class NewbiecontestFS(fuse.Fuse):
 
     def read(self, path, *args, **kwargs):
         path = path[1:]
-        (prefix, tail) = self.pathsplit(path)
+        (ms, tail) = self.modulepath(path)
 
-        if prefix in self.dirmodules:
-            for m in self.dirmodules[prefix]:
-                val = m.read(tail, *args, **kwargs)
-                if val != -errno.ENOENT:
-                    return val
-        else:
-            for m in self.rootmodules:
-                val = m.read(path, *args, **kwargs)
-                if val != -errno.ENOENT:
-                    return val
+        for m in ms:
+            val = m.read(tail, *args, **kwargs)
+            if val != -errno.ENOENT:
+                return val
 
         return -errno.ENOENT
 
