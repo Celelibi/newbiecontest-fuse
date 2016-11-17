@@ -3,6 +3,7 @@
 import os
 import errno
 import time
+import datetime
 import re
 import fuse
 import lxml.html
@@ -79,8 +80,8 @@ class News(object):
                 raise ParsingException()
 
             date = match.group(1)
-            date = time.strptime(date, "%d %m %Y à %H:%M:%S")
-            news.stat.st_mtime = time.mktime(date)
+            date = datetime.datetime.strptime(date, "%d %m %Y à %H:%M:%S")
+            news.stat.st_mtime = int(date.strftime("%s"))
             news.stat.st_ctime = news.stat.st_mtime
 
             # Add the File to the list
