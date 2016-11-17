@@ -131,6 +131,8 @@ class Auth(object):
 
 
     def truncate(self, path, length):
+        if path not in self.files:
+            return -errno.ENOENT
         self.files[path].truncate(length)
 
 
