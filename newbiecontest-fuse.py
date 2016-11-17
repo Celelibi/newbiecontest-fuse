@@ -70,25 +70,17 @@ class NewbiecontestFS(fuse.Fuse):
     def readdir(self, path, offset):
         dotdot = [fuse.Direntry("."), fuse.Direntry("..")]
         path = path[1:]
-        (prefix, tail) = self.pathsplit(path)
+        (ms, tail) = self.modulepath(path)
 
-        if path == "":
-            dm = [fuse.Direntry(name) for name in self.dirmodules.keys()]
-            rm = [m.readdir(path, offset) for m in self.rootmodules]
-            return itertools.chain(dotdot, dm, *rm)
+        if tail == "":
+            f = [m.readdir(tail, offset) for m in ms]
+            if path == "":
+                f.append(fuse.Direntry(name) for name in self.dirmodules.keys())
+            return itertools.chain(dotdot, *f)
 
-        elif path in self.dirmodules:
-            dm = [m.readdir(tail, offset) for m in self.dirmodules[path]]
-            return itertools.chain(dotdot, *dm)
-
-        elif prefix in self.dirmodules:
-            for m in self.dirmodules[prefix]:
-                g = m.readdir(tail, offset)
-                if g != -errno.ENOENT:
-                    return g
         else:
-            for m in self.rootmodules:
-                g = m.readdir(path, offset)
+            for m in ms:
+                g = m.readdir(tail, offset)
                 if g != -errno.ENOENT:
                     return g
 
