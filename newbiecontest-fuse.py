@@ -128,18 +128,12 @@ class NewbiecontestFS(fuse.Fuse):
 
     def truncate(self, path, *args, **kwargs):
         path = path[1:]
-        (prefix, tail) = self.pathsplit(path)
+        (ms, tail) = self.modulepath(path)
 
-        if prefix in self.dirmodules:
-            for m in self.dirmodules[prefix]:
-                val = m.truncate(tail, *args, **kwargs)
-                if val != -errno.ENOENT:
-                    return val
-        else:
-            for m in self.rootmodules:
-                val = m.truncate(path, *args, **kwargs)
-                if val != -errno.ENOENT:
-                    return val
+        for m in ms:
+            val = m.truncate(tail, *args, **kwargs)
+            if val != -errno.ENOENT:
+                return val
 
         return -errno.ENOENT
 
