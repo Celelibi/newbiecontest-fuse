@@ -4,7 +4,6 @@
 import errno
 import fuse
 import itertools
-import collections
 
 import fileobjects as fo
 import modules.news as news
@@ -18,14 +17,14 @@ fuse.fuse_python_api = (0, 2)
 class NewbiecontestFS(fuse.Fuse):
     def __init__(self, *args, **kwargs):
         super(NewbiecontestFS, self).__init__(*args, **kwargs)
-        self.rootmodules = []
-        self.dirmodules = collections.defaultdict(list)
 
         req = authrequests.AuthRequests()
 
-        self.rootmodules.append(authrequests.Auth(req))
-        self.dirmodules["news"].append(news.News(req))
-        self.dirmodules["challenges"].append(challenges.Challenges(req))
+        self.rootmodule = authrequests.Auth(req)
+
+        self.dirmodules = {}
+        self.dirmodules["news"] = news.News(req)
+        self.dirmodules["challenges"] = challenges.Challenges(req)
 
 
     @staticmethod
@@ -40,18 +39,17 @@ class NewbiecontestFS(fuse.Fuse):
         (prefix, tail) = self.pathsplit(path)
         if prefix in self.dirmodules:
             return (self.dirmodules[prefix], tail)
-        return (self.rootmodules, path)
+        return (self.rootmodule, path)
 
 
     def getattr(self, path):
         path = path[1:]
-        (ms, tail) = self.modulepath(path)
+        (m, tail) = self.modulepath(path)
 
         if tail == "":
             # Asking for / or a dirmodule
             st = fo.DirStat()
-            for m in ms:
-                st.st_nlink += m.getndirs()
+            st.st_nlink += m.getndirs()
 
             if path == "":
                 st.st_nlink += len(self.dirmodules)
@@ -59,83 +57,50 @@ class NewbiecontestFS(fuse.Fuse):
 
         else:
             # Asking for a module's content
-            for m in ms:
-                st = m.getattr(tail)
-                if st != -errno.ENOENT:
-                    return st
-
-        return -errno.ENOENT
+            return m.getattr(tail)
 
 
     def readdir(self, path, offset):
         dotdot = [fuse.Direntry("."), fuse.Direntry("..")]
         path = path[1:]
-        (ms, tail) = self.modulepath(path)
+        (m, tail) = self.modulepath(path)
 
         if tail == "":
-            f = [m.readdir(tail, offset) for m in ms]
+            f = [m.readdir(tail, offset)]
             if path == "":
                 f.append(fuse.Direntry(name) for name in self.dirmodules.keys())
             return itertools.chain(dotdot, *f)
 
         else:
-            for m in ms:
-                g = m.readdir(tail, offset)
-                if g != -errno.ENOENT:
-                    return g
-
-        return -errno.ENOENT
+            return m.readdir(tail, offset)
 
 
     def open(self, path, *args, **kwargs):
         path = path[1:]
-        (ms, tail) = self.modulepath(path)
+        (m, tail) = self.modulepath(path)
 
         if tail == "":
             return -errno.EISDIR
 
-        for m in ms:
-            val = m.open(tail, *args, **kwargs)
-            if val != -errno.ENOENT:
-                return val
-
-        return -errno.ENOENT
+        return m.open(tail, *args, **kwargs)
 
 
     def read(self, path, *args, **kwargs):
         path = path[1:]
-        (ms, tail) = self.modulepath(path)
-
-        for m in ms:
-            val = m.read(tail, *args, **kwargs)
-            if val != -errno.ENOENT:
-                return val
-
-        return -errno.ENOENT
+        (m, tail) = self.modulepath(path)
+        return m.read(tail, *args, **kwargs)
 
 
     def write(self, path, *args, **kwargs):
         path = path[1:]
-        (ms, tail) = self.modulepath(path)
-
-        for m in ms:
-            val = m.write(tail, *args, **kwargs)
-            if val != -errno.ENOENT:
-                return val
-
-        return -errno.ENOENT
+        (m, tail) = self.modulepath(path)
+        return m.write(tail, *args, **kwargs)
 
 
     def truncate(self, path, *args, **kwargs):
         path = path[1:]
-        (ms, tail) = self.modulepath(path)
-
-        for m in ms:
-            val = m.truncate(tail, *args, **kwargs)
-            if val != -errno.ENOENT:
-                return val
-
-        return -errno.ENOENT
+        (m, tail) = self.modulepath(path)
+        return m.truncate(tail, *args, **kwargs)
 
 
 
