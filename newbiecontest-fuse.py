@@ -4,6 +4,7 @@
 import errno
 import fuse
 import itertools
+import collections
 
 import fileobjects as fo
 import modules.news as news
@@ -17,25 +18,14 @@ fuse.fuse_python_api = (0, 2)
 class NewbiecontestFS(fuse.Fuse):
     def __init__(self, *args, **kwargs):
         super(NewbiecontestFS, self).__init__(*args, **kwargs)
-        self.pathmodule = {}
+        self.rootmodules = []
+        self.dirmodules = collections.defaultdict(list)
 
         req = authrequests.AuthRequests()
-        self.modules = [
-                authrequests.Auth(req),
-                news.News(req),
-                challenges.Challenges(req)
-        ]
 
-        for m in self.modules:
-            for p in m.handledpath():
-                self.pathmodule[p] = m
-
-        # Separate the modules rooted in / and those rooted in their own dir
-        self.rootmodules = [self.modules[0]]
-        self.dirmodules = {}
-        for p, m in self.pathmodule.items():
-            if m not in self.rootmodules:
-                self.dirmodules[p] = [m]
+        self.rootmodules.append(authrequests.Auth(req))
+        self.dirmodules["/news"].append(news.News(req))
+        self.dirmodules["/challenges"].append(challenges.Challenges(req))
 
 
     @staticmethod
