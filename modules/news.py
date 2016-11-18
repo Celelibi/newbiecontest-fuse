@@ -1,33 +1,31 @@
 # coding: utf-8
 
 import os
-import errno
 import time
 import datetime
 import re
-import fuse
 import lxml.html
 
 import fileobjects as fo
-from . import ParsingException
+from . import ParsingException, FSSubModuleFiles
 
 
 
-class News(object):
+class News(FSSubModuleFiles):
     urlnews = "index.php?page=news"
     newslife = 60
     datere = re.compile('^(\d+ \d+ \d+ à \d+:\d+:\d+)')
 
 
     def __init__(self, req):
+        super(News, self).__init__()
         self.req = req
-        self.newslist = None
         self.newsexpir = None
 
 
-    def _getnews(self):
+    def updatefiles(self):
         now = time.time()
-        if self.newslist is not None and self.newsexpir > now:
+        if self.newsexpir is not None and self.newsexpir > now:
             return
 
         res = self.req.get(self.urlnews)
@@ -40,7 +38,7 @@ class News(object):
                 "Août" : "08", "Septembre" : "09", "Octobre" : "10",
                 "Novembre" : "11", "Décembre" : "12"
         }
-        self.newslist = {}
+        self.files = {}
 
         for i in range(0, len(elements), 4):
             # The list end with a single <p>
@@ -88,42 +86,5 @@ class News(object):
             news.stat.st_ctime = news.stat.st_mtime
 
             # Add the File to the list
-            self.newslist[news.name] = news
+            self.files[news.name] = news
         self.newsexpir = now + self.newslife
-
-
-    def getndirs(self):
-        return 0
-
-
-    def getattr(self, path):
-        self._getnews()
-        if path in self.newslist:
-            return self.newslist[path].stat
-
-        return -errno.ENOENT
-
-
-    def readdir(self, path, offset):
-        self._getnews()
-
-        for f in self.newslist.values():
-            yield fuse.Direntry(f.name)
-
-
-    def open(self, path, flags):
-        accmode = os.O_RDONLY | os.O_WRONLY | os.O_RDWR
-        if (flags & accmode) != os.O_RDONLY:
-            return -errno.EACCES
-
-        self._getnews()
-
-        if path not in self.newslist:
-            return -errno.ENOENT
-
-
-    def read(self, path, size, offset):
-        self._getnews()
-        if path in self.newslist:
-            return self.newslist[path].content[offset:offset+size]
-        return -errno.ENOENT
