@@ -61,7 +61,8 @@ def main():
     usage += NewbiecontestFS.fusage
 
     server = NewbiecontestFS(usage = usage)
-    server.parse(errex = 1)
+    args = server.parse(errex = 1)
+    args.add('default_permissions')
     server.main()
 
 
