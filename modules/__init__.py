@@ -1,6 +1,7 @@
 # coding: utf-8
 
 import errno
+import stat
 import fuse
 import itertools
 
@@ -133,3 +134,80 @@ class FSSubModule(FSModule):
     def truncate(self, path, *args, **kwargs):
         (m, tail) = self.modulepath(path)
         return m.truncate(tail, *args, **kwargs)
+
+
+
+class FSSubModuleFiles(FSSubModule):
+    """This class handles submodules as well as files, it is ment to be
+    inherited to override at least the method updatefiles.
+
+    Attributes:
+        files    A dict that associate nales to any subclass of File or
+                 Directory."""
+
+    def __init__(self, *args, **kwargs):
+        self.superself = super(FSSubModuleFiles, self)
+        self.superself.__init__(*args, **kwargs)
+        self.files = {}
+
+
+    def updatefiles(self):
+        pass
+
+
+    def getndirs(self):
+        self.updatefiles()
+
+        count = 0
+        for f in self.files.values():
+            if f.stat.st_mode & stat.S_IFDIR:
+                count += 1
+        return count + self.superself.getndirs()
+
+
+    def getattr(self, path):
+        self.updatefiles()
+        if path in self.files:
+            return self.files[path].stat
+
+        return self.superself.getattr(path)
+
+
+    def readdir(self, path, offset):
+        self.updatefiles()
+
+        otherfiles = self.superself.readdir(path, offset)
+        if path != "":
+            return otherfiles
+
+        myfiles = (fuse.Direntry(f.name) for f in self.files.values())
+        return itertools.chain(otherfiles, myfiles)
+
+
+    def open(self, path, flags):
+        self.updatefiles()
+
+        if path not in self.files:
+            return self.superself.open(path, flags)
+
+
+    def read(self, path, size, offset):
+        self.updatefiles()
+        if path in self.files:
+            return self.files[path].read(size, offset)
+        return self.superself.read(path, size, offset)
+
+
+    def write(self, path, buf, offset):
+        self.updatefiles()
+        if path in self.files:
+            return self.files[path].write(buf, offset)
+        return self.superself.write(path, buf, offset)
+
+
+    def truncate(self, path, length):
+        self.updatefiles()
+        if path in self.files:
+            self.files[path].truncate(length)
+            return None
+        return self.superself.truncate(path, length)
