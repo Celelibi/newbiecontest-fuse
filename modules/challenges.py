@@ -3,8 +3,14 @@
 import time
 import lxml.html
 
-import fileobjects as fo
 from . import ParsingException, FSSubModuleFiles
+
+
+
+class Category(FSSubModuleFiles):
+    def __init__(self, caturl):
+        super(Category, self).__init__()
+        self.caturl = caturl
 
 
 
@@ -31,7 +37,7 @@ class Challenges(FSSubModuleFiles):
         if len(tables) != 3:
             raise ParsingException()
 
-        self.files = {}
+        self.dirmodules = {}
 
         # Categories are linked in the first table
         tablecat = tables[0]
@@ -43,6 +49,6 @@ class Challenges(FSSubModuleFiles):
                 continue
 
             catname = catname[len('Épreuves '):]
-            self.files[catname] = fo.Directory(catname)
+            self.dirmodules[catname] = Category(caturl)
 
         self.catexpir = now + self.cachelife
