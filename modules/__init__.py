@@ -77,6 +77,10 @@ class FSSubModule(FSModule):
         return (self.rootmodule, path)
 
 
+    def getndirs(self):
+        return self.rootmodule.getndirs() + len(self.dirmodules)
+
+
     def getattr(self, path):
         (m, tail) = self.modulepath(path)
 
