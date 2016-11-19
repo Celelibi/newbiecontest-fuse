@@ -12,14 +12,6 @@ class AuthException(BaseException):
 
 
 
-# This is what truncate should do to the content
-def cutextend(s, size):
-    s = s[:size]
-    s += b'\0' * (size - len(s))
-    return s
-
-
-
 class FileUsername(fo.File):
     def __init__(self, name, auth, **kwargs):
         kwargs.setdefault('isWritable', True)
@@ -35,9 +27,6 @@ class FileUsername(fo.File):
         if val != self.auth.username:
             self.auth.deauth()
             self.auth.username = val
-
-    def truncate(self, size):
-        self.content = cutextend(self.content, size)
 
 
 
@@ -60,7 +49,7 @@ class FilePassword(fo.File):
         self.stat.touch()
 
     def truncate(self, size):
-        self.content = cutextend(self.auth.password, size)
+        self.content = self.cutextend(self.auth.password, size)
 
 
 
@@ -80,7 +69,7 @@ class FileDeauth(fo.File):
             pass
 
     def truncate(self, size):
-        self.content = cutextend(b'', size)
+        self.content = self.cutextend(b'', size)
 
 
 

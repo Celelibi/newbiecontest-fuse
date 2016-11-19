@@ -50,6 +50,13 @@ class File(object):
         self._content = content
         self.stat.st_size = len(content)
 
+    # This is what truncate should do to the content
+    @staticmethod
+    def cutextend(s, size):
+        s = s[:size]
+        s += b'\0' * (size - len(s))
+        return s
+
     @property
     def content(self):
         self.stat.st_atime = int(time.time())
@@ -60,6 +67,9 @@ class File(object):
         self._content = content
         self.stat.st_size = len(content)
         self.stat.touch()
+
+    def truncate(self, size):
+        self.content = self.cutextend(self.content, size)
 
 
 
