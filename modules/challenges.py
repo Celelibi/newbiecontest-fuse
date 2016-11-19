@@ -15,13 +15,6 @@ class Challenges(object):
     cachelife = 60
 
 
-    class Category(object):
-        def __init__(self, name, link = None):
-            self.name = name
-            self.link = link
-            self.dir = fo.Directory(name)
-
-
     def __init__(self, req):
         self.req = req
         self.catdirs = None
@@ -52,7 +45,7 @@ class Challenges(object):
                 continue
 
             catname = catname[len('Épreuves '):]
-            self.catdirs[catname] = self.Category(catname, caturl)
+            self.catdirs[catname] = fo.Directory(catname)
 
         self.catexpir = now + self.cachelife
 
@@ -66,7 +59,7 @@ class Challenges(object):
         self._getcategories()
 
         if path in self.catdirs:
-            return self.catdirs[path].dir.stat
+            return self.catdirs[path].stat
 
         return -errno.ENOENT
 
