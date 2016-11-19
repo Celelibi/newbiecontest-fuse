@@ -1,10 +1,9 @@
 # coding: utf-8
 
-import errno
 import requests
-import fuse
 
 import fileobjects as fo
+from . import FSSubModuleFiles
 
 
 
@@ -84,11 +83,12 @@ class FileDeauth(fo.File):
 
 
 
-class Auth(object):
+class Auth(FSSubModuleFiles):
     """This class is responsible for the virtual files /username, /password and
     /deauth."""
 
     def __init__(self, req):
+        super(Auth, self).__init__()
         self.req = req
         self.files = {}
 
@@ -98,47 +98,6 @@ class Auth(object):
 
         for f in [uf, pf, df]:
             self.files[f.name] = f
-
-
-    def getndirs(self):
-        return 0
-
-
-    def getattr(self, path):
-        if path in self.files:
-            return self.files[path].stat
-        return -errno.ENOENT
-
-
-    def readdir(self, path, offset):
-        for f in self.files.values():
-            yield fuse.Direntry(f.name)
-
-
-    def open(self, path, flags):
-        if path not in self.files:
-            return -errno.ENOENT
-
-        return None
-
-
-    def read(self, path, size, offset):
-        if path in self.files:
-            return self.files[path].content[offset:offset+size]
-        return -errno.ENOENT
-
-
-    def write(self, path, buf, offset):
-        if path in self.files:
-            self.files[path].content = bytes(buf)
-            return len(buf)
-        return -errno.ENOENT
-
-
-    def truncate(self, path, length):
-        if path not in self.files:
-            return -errno.ENOENT
-        self.files[path].truncate(length)
 
 
 
