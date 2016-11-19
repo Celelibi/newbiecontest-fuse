@@ -1,29 +1,27 @@
 # coding: utf-8
 
-import errno
 import time
-import fuse
 import lxml.html
 
 import fileobjects as fo
-from . import ParsingException
+from . import ParsingException, FSSubModuleFiles
 
 
 
-class Challenges(object):
+class Challenges(FSSubModuleFiles):
     urlcat = "index.php?page=challenges"
     cachelife = 60
 
 
     def __init__(self, req):
+        super(Challenges, self).__init__()
         self.req = req
-        self.catdirs = None
         self.catexpir = None
 
 
-    def _getcategories(self):
+    def updatefiles(self):
         now = time.time()
-        if self.catdirs is not None and self.catexpir > now:
+        if self.catexpir is not None and self.catexpir > now:
             return
 
         res = self.req.get(self.urlcat)
@@ -33,7 +31,7 @@ class Challenges(object):
         if len(tables) != 3:
             raise ParsingException()
 
-        self.catdirs = {}
+        self.files = {}
 
         # Categories are linked in the first table
         tablecat = tables[0]
@@ -45,27 +43,6 @@ class Challenges(object):
                 continue
 
             catname = catname[len('Épreuves '):]
-            self.catdirs[catname] = fo.Directory(catname)
+            self.files[catname] = fo.Directory(catname)
 
         self.catexpir = now + self.cachelife
-
-
-    def getndirs(self):
-        self._getcategories()
-        return len(self.catdirs)
-
-
-    def getattr(self, path):
-        self._getcategories()
-
-        if path in self.catdirs:
-            return self.catdirs[path].stat
-
-        return -errno.ENOENT
-
-
-    def readdir(self, path, offset):
-        self._getcategories()
-
-        for f in self.catdirs.values():
-            yield fuse.Direntry(f.name)
