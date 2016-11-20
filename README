@@ -41,3 +41,6 @@ Fichiers
 
  * /challenges
 	Contient un répertoire par catégorie de challenge.
+
+ * /challenges/<categorie>
+	Contient un répertoire par challenge.
