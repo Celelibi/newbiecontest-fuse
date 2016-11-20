@@ -52,3 +52,11 @@ Fichiers
 	Lorsqu'il est présent, ce fichier indique que le contenu de l'épreuve
 	n'a pas pu être téléchargé car les informations d'authentification sont
 	erronées.
+
+ * /challenges/<categorie>/<challenge>/url
+	Ce fichier contient l'URL de cette épreuve. Toutes les informations
+	nécessaires à la résolution d'une épreuve ne sont pas forcément
+	accessibles depuis le système de fichiers, il peut être utile d'ouvrir
+	cette adresse dans un navigateur avec la commande :
+	$ firefox $(cat url)
+	ou tout autre navigateur.

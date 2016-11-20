@@ -58,6 +58,9 @@ class Challenge(FSSubModuleFiles):
 
         self.files = {}
 
+        fullurl = self.req.fullurl(self.url)
+        self.files['url'] = fo.File('url', content = bytes(fullurl + "\n"))
+
         try:
             doc = self._authgetchall()
         except AuthException:
