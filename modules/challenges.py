@@ -4,11 +4,25 @@ import time
 import re
 import lxml.html
 
+import fileobjects as fo
+from authrequests import AuthException
 from . import ParsingException, FSSubModuleFiles
 
 
 
+class UnAuthFile(fo.File):
+    def __init__(self, name, **kwargs):
+        kwargs.setdefault('content', b"You are not authenticated !\n")
+        super(UnAuthFile, self).__init__(name, **kwargs)
+
+
+
+
 class Challenge(FSSubModuleFiles):
+    cachelife = 60
+    unauthcachelife = 3
+
+
     def __init__(self, req, name, url, devnull, valids, pts, note, date):
         super(Challenge, self).__init__()
         self.req = req
@@ -19,6 +33,44 @@ class Challenge(FSSubModuleFiles):
         self.pts = pts
         self.note = note
         self.date = date
+        self.cacheexpir = None
+
+
+    def _authgetchall(self):
+        res = self.req.get(self.url)
+        doc = lxml.html.fromstring(res.content, base_url = res.url)
+
+        h2 = doc.cssselect('div#content > div.textpad > h2')
+        if len(h2) > 0:
+            msg = lxml.html.tostring(h2[0], encoding = 'utf-8', method = 'text')
+            if msg.find('pas authentifié') != -1:
+                self.req.auth()
+                res = self.req.get(self.url)
+                doc = lxml.html.fromstring(res.content, base_url = res.url)
+
+        return doc
+
+
+    def updatefiles(self):
+        now = time.time()
+        if self.cacheexpir is not None and self.cacheexpir > now:
+            return
+
+        self.files = {}
+
+        try:
+            doc = self._authgetchall()
+        except AuthException:
+            self.files['NotAuthenticated'] = UnAuthFile('NotAuthenticated')
+            self.cacheexpir = now + self.unauthcachelife
+            return
+
+
+        self.cacheexpir = now + self.cachelife
+
+
+    def getndirs(self):
+        return 0
 
 
 

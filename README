@@ -44,3 +44,11 @@ Fichiers
 
  * /challenges/<categorie>
 	Contient un répertoire par challenge.
+
+ * /challenges/<categorie>/<challenge>
+	Contient les fichiers d'une épreuve.
+
+ * /challenges/<categorie>/<challenge>/NotAuthenticated
+	Lorsqu'il est présent, ce fichier indique que le contenu de l'épreuve
+	n'a pas pu être téléchargé car les informations d'authentification sont
+	erronées.
