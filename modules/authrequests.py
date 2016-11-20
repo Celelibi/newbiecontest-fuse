@@ -113,8 +113,12 @@ class AuthRequests(object):
         self.cookies = None
 
 
+    def fullurl(self, path):
+        return self.urlbase + path
+
+
     def get(self, url, **kwargs):
-        resp = requests.get(self.urlbase + url, cookies = self.cookies, **kwargs)
+        resp = requests.get(self.fullurl(url), cookies = self.cookies, **kwargs)
         if self.cookies is None:
             self.cookies = resp.cookies
         else:
@@ -123,7 +127,7 @@ class AuthRequests(object):
 
 
     def post(self, url, **kwargs):
-        resp = requests.post(self.urlbase + url, cookies = self.cookies, **kwargs)
+        resp = requests.post(self.fullurl(url), cookies = self.cookies, **kwargs)
         if self.cookies is None:
             self.cookies = resp.cookies
         else:
