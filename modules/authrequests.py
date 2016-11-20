@@ -49,6 +49,11 @@ class FilePassword(fo.File):
 
         self.stat.touch()
 
+    def write(self, buf, offset):
+        self.truncate(0)
+        self.content = buf
+        return len(buf)
+
     def truncate(self, size):
         self.content = self.cutextend(self.auth.password, size)
 
@@ -68,6 +73,11 @@ class FileDeauth(fo.File):
                 self.auth.deauth()
         except ValueError:
             pass
+
+    def write(self, buf, offset):
+        self.truncate(0)
+        self.content = buf
+        return len(buf)
 
     def truncate(self, size):
         self.content = self.cutextend(b'', size)
