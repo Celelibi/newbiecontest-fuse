@@ -29,10 +29,11 @@ class Category(FSSubModuleFiles):
     votere = re.compile('^([0-9.]+) / 10')
 
 
-    def __init__(self, req, url):
+    def __init__(self, req, url, nchalls):
         super(Category, self).__init__()
         self.req = req
         self.url = url
+        self.nchalls = nchalls
         self.cacheexpir = None
 
 
@@ -85,13 +86,19 @@ class Category(FSSubModuleFiles):
             self.dirmodules[challname] = Challenge(self.req, challname,
                     challurl, devnull, validscnt, points, votes, date)
 
+        self.nchalls = len(self.dirmodules)
         self.cacheexpir = now + self.cachelife
+
+
+    def getndirs(self):
+        return self.nchalls
 
 
 
 class Challenges(FSSubModuleFiles):
     urlcat = "index.php?page=challenges"
     cachelife = 60
+    nchallsre = re.compile('^\d+ / (\d+)')
 
 
     def __init__(self, req):
@@ -116,14 +123,24 @@ class Challenges(FSSubModuleFiles):
 
         # Categories are linked in the first table
         tablecat = tables[0]
-        for link in tablecat.cssselect('tr strong a'):
+
+        for row in tablecat.cssselect('tr'):
+            [tdlink, tdcount] = row.cssselect('td')
+
+            # Parse the link and category name
+            [link] = tdlink.cssselect('strong a')
             caturl = link.get('href')
             catname = lxml.html.tostring(link, encoding = 'utf-8', method = 'text').strip()
 
-            if not catname.startswith('Épreuves '):
-                continue
+            if catname.startswith('Épreuves '):
+                catname = catname[len('Épreuves '):]
 
-            catname = catname[len('Épreuves '):]
-            self.dirmodules[catname] = Category(self.req, caturl)
+            # Parse the challenge count
+            nchalls = lxml.html.tostring(tdcount, encoding = 'utf-8', method = 'text')
+            match = self.nchallsre.match(nchalls)
+            nchalls = int(match.group(1))
+
+
+            self.dirmodules[catname] = Category(self.req, caturl, nchalls)
 
         self.catexpir = now + self.cachelife
