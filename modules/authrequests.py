@@ -115,13 +115,19 @@ class AuthRequests(object):
 
     def get(self, url, **kwargs):
         resp = requests.get(self.urlbase + url, cookies = self.cookies, **kwargs)
-        self.cookies = resp.cookies
+        if self.cookies is None:
+            self.cookies = resp.cookies
+        else:
+            self.cookies.update(resp.cookies)
         return resp
 
 
     def post(self, url, **kwargs):
         resp = requests.post(self.urlbase + url, cookies = self.cookies, **kwargs)
-        self.cookies = resp.cookies
+        if self.cookies is None:
+            self.cookies = resp.cookies
+        else:
+            self.cookies.update(resp.cookies)
         return resp
 
 
