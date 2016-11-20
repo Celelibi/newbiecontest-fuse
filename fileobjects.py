@@ -68,6 +68,15 @@ class File(object):
         self.stat.st_size = len(content)
         self.stat.touch()
 
+    def read(self, size, offset):
+        return self.content[offset:offset+size]
+
+    def write(self, buf, offset):
+        c = self.content
+        c = c[:offset] + bytes(buf) + c[offset+len(buf):]
+        self.content = c
+        return len(buf)
+
     def truncate(self, size):
         self.content = self.cutextend(self.content, size)
 
