@@ -117,8 +117,11 @@ class AuthRequests(object):
         return self.urlbase + path
 
 
-    def get(self, url, **kwargs):
-        resp = requests.get(self.fullurl(url), cookies = self.cookies, **kwargs)
+    def request(self, method, url, **kwargs):
+        kwargs.setdefault('allow_redirects', True)
+        kwargs.setdefault('cookies', self.cookies)
+        resp = requests.request(method, self.fullurl(url), **kwargs)
+
         if self.cookies is None:
             self.cookies = resp.cookies
         else:
@@ -126,13 +129,12 @@ class AuthRequests(object):
         return resp
 
 
-    def post(self, url, **kwargs):
-        resp = requests.post(self.fullurl(url), cookies = self.cookies, **kwargs)
-        if self.cookies is None:
-            self.cookies = resp.cookies
-        else:
-            self.cookies.update(resp.cookies)
-        return resp
+    def get(self, *args, **kwargs):
+        return self.request('get', *args, **kwargs)
+
+
+    def post(self, *args, **kwargs):
+        return self.request('post', *args, **kwargs)
 
 
     def auth(self):
