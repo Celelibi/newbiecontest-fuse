@@ -1,6 +1,7 @@
 # coding: utf-8
 
 import requests
+import lxml.html
 
 import fileobjects as fo
 from . import FSSubModuleFiles
@@ -135,6 +136,21 @@ class AuthRequests(object):
 
     def post(self, *args, **kwargs):
         return self.request('post', *args, **kwargs)
+
+
+    @staticmethod
+    def is_auth(res):
+        doc = lxml.html.fromstring(res.content, base_url = res.url)
+        forms = doc.cssselect('div#content > div.member > form')
+        if len(forms) > 0:
+            return False
+
+        infos = doc.cssselect('div#content > div.member > div#memberinfos')
+        if len(infos) > 0:
+            return True
+
+        # I dunno, LOL. ¯\_(ツ)_/¯
+        return False
 
 
     def auth(self):

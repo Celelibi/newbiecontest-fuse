@@ -38,15 +38,11 @@ class Challenge(FSSubModuleFiles):
 
     def _authgetchall(self):
         res = self.req.get(self.url)
-        doc = lxml.html.fromstring(res.content, base_url = res.url)
 
-        h2 = doc.cssselect('div#content > div.textpad > h2')
-        if len(h2) > 0:
-            msg = lxml.html.tostring(h2[0], encoding = 'utf-8', method = 'text')
-            if msg.find('pas authentifié') != -1:
-                self.req.auth()
-                res = self.req.get(self.url)
-                doc = lxml.html.fromstring(res.content, base_url = res.url)
+        if not self.req.is_auth(res):
+            self.req.auth()
+            res = self.req.get(self.url)
+            doc = lxml.html.fromstring(res.content, base_url = res.url)
 
         return doc
 
