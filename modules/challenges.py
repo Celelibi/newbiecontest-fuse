@@ -21,6 +21,7 @@ class UnAuthFile(fo.File):
 class Challenge(FSSubModuleFiles):
     cachelife = 60
     unauthcachelife = 3
+    namere = re.compile('(.*), par .*')
 
 
     def __init__(self, req, name, url, devnull, valids, pts, note, date):
@@ -46,6 +47,9 @@ class Challenge(FSSubModuleFiles):
         fullurl = self.req.fullurl(self.url)
         self.files['url'] = fo.File('url', content = bytes(fullurl + "\n"))
 
+        # Poor man's alternative to the real files gotten below
+        self.files["name"] = fo.File("name", content = bytes(self.name) + "\n")
+
         try:
             res = self.req.get(self.url, True)
         except AuthException:
@@ -53,6 +57,17 @@ class Challenge(FSSubModuleFiles):
             self.cacheexpir = now + self.unauthcachelife
             return
 
+        doc = lxml.html.fromstring(res.content, base_url = res.url)
+        [content] = doc.cssselect('div#content > div.textpad')
+
+        # Parse the challenge name
+        h2 = content.cssselect('h2')
+        self.name = lxml.html.tostring(h2[0], encoding = 'utf-8', method = 'text')
+        self.name = self.name.rstrip("\r\n")
+        match = self.namere.match(self.name)
+        if match is not None:
+            self.name = match.group(1)
+        self.files["name"] = fo.File("name", content = bytes(self.name + "\n"))
 
         self.cacheexpir = now + self.cachelife
 

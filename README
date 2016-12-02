@@ -60,3 +60,6 @@ Fichiers
 	cette adresse dans un navigateur avec la commande :
 	$ firefox $(cat url)
 	ou tout autre navigateur.
+
+ * /challenges/<categorie>/<challenge>/name
+	Ce fichier contient le nom de l'épreuve.
