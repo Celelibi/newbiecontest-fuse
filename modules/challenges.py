@@ -36,17 +36,6 @@ class Challenge(FSSubModuleFiles):
         self.cacheexpir = None
 
 
-    def _authgetchall(self):
-        res = self.req.get(self.url)
-
-        if not self.req.is_auth(res):
-            self.req.auth()
-            res = self.req.get(self.url)
-            doc = lxml.html.fromstring(res.content, base_url = res.url)
-
-        return doc
-
-
     def updatefiles(self):
         now = time.time()
         if self.cacheexpir is not None and self.cacheexpir > now:
@@ -58,7 +47,7 @@ class Challenge(FSSubModuleFiles):
         self.files['url'] = fo.File('url', content = bytes(fullurl + "\n"))
 
         try:
-            doc = self._authgetchall()
+            res = self.req.get(self.url, True)
         except AuthException:
             self.files['NotAuthenticated'] = UnAuthFile('NotAuthenticated')
             self.cacheexpir = now + self.unauthcachelife

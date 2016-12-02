@@ -1,5 +1,7 @@
 # coding: utf-8
 
+import time
+import random
 import requests
 import threading
 import lxml.html
@@ -133,7 +135,15 @@ class AuthRequests(object):
         kwargs.setdefault('allow_redirects', True)
         kwargs.setdefault('cookies', self.cookies)
         url = self.fullurl(url)
-        return requests.request(method, url, **kwargs)
+
+        for _ in range(3):
+            resp = requests.request(method, url, **kwargs)
+            if resp.status_code != 403:
+                break
+
+            # Sleep for 1 to 10 seconds before retrying
+            time.sleep(random.randint(10, 100) / 10)
+        return resp
 
 
     def request(self, method, url, auth = False, **kwargs):
