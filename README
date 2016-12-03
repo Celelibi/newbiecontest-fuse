@@ -78,3 +78,6 @@ Fichiers
 
  * /challenges/<categorie>/<challenge>/points
 	Ce fichier contient le nombre de points que vaut une épreuve.
+
+ * /challenges/<categorie>/<challenge>/quality
+	Ce fichier contient la note attribuée à cette épreuve.

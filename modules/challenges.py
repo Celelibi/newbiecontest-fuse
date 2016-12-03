@@ -34,9 +34,10 @@ class Challenge(FSSubModuleFiles):
     lastvalidre = re.compile('Dernière validation par (.*), le (\d+/\d+/\d+ à \d+:\d+)')
     validsre = re.compile('(\d+) validation')
     ptsre = re.compile('(\d+) point')
+    qualityre = re.compile('([0-9.]+) / 10')
 
 
-    def __init__(self, req, name, url, devnull, valids, pts, note, date):
+    def __init__(self, req, name, url, devnull, valids, pts, quality, date):
         super(Challenge, self).__init__()
         self.req = req
         self.name = name
@@ -44,7 +45,7 @@ class Challenge(FSSubModuleFiles):
         self.devnull = devnull
         self.valids = valids
         self.pts = pts
-        self.note = note
+        self.quality = quality
         self.date = date
         self.cacheexpir = None
 
@@ -138,6 +139,14 @@ class Challenge(FSSubModuleFiles):
                 if match is not None:
                     self.pts = int(match.group(1))
             self.files["points"] = fo.File("points", content = bytes(str(self.pts)) + "\n")
+
+        # Parse quality
+        if not self.devnull:
+            [img] = content.cssselect('img[src *= "challs_ranks"]')
+            self.quality = img.get('title')
+            match = self.qualityre.match(self.quality)
+            self.quality = float(match.group(1))
+            self.files["quality"] = fo.File("quality", content = bytes(str(self.quality)) + "\n")
 
 
         self.cacheexpir = now + self.cachelife
