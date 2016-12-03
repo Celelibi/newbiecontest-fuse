@@ -91,3 +91,8 @@ Fichiers
  * /challenges/<categorie>/<challenge>/helpurl
 	Ce fichier contient l'URL du topic d'aide du forum pour cette épreuve.
 	Ce fichier n'est présent que si l'authentification a réussi.
+
+ * /challenges/<categorie>/<challenge>/author
+	Ce fichier contient le pseudo de l'auteur de l'épreuve. Ce fichier
+	n'est présent que si l'authentification a réussi et que l'auteur de
+	l'épreuve est connu.

@@ -91,6 +91,14 @@ class Challenge(FSSubModuleFiles):
             self.name = match.group(1)
         self.files["name"] = fo.File("name", content = bytes(self.name + "\n"))
 
+        # Parse the author from the "name"
+        links = h2[0].cssselect('a[href *= "page=info_membre"]')
+        if len(links) > 0:
+            self.author = lxml.html.tostring(links[0], encoding = 'utf-8', method = 'text')
+            self.files["author"] = fo.File("author", content = bytes(self.author + "\n"))
+        else:
+            self.author = None
+
         # Parse number of validations
         # Note that self.valids is used to make the file "lastvalidation"
         self.valids = None
