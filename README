@@ -71,3 +71,6 @@ Fichiers
 	Ce fichier contient le pseudo de la dernière personne à avoir validé
 	cette épreuve. Ce fichier n'est présent que si l'authentification a pu
 	se faire et que l'épreuve n'est pas /dev/nullée.
+
+ * /challenges/<categorie>/<challenge>/validations
+	Ce fichier contient le nombre de validations pour cette épreuve.

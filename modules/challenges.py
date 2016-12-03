@@ -32,6 +32,7 @@ class Challenge(FSSubModuleFiles):
     unauthcachelife = 3
     namere = re.compile('(.*), par .*')
     lastvalidre = re.compile('Dernière validation par (.*), le (\d+/\d+/\d+ à \d+:\d+)')
+    validsre = re.compile('(\d+) validation')
 
 
     def __init__(self, req, name, url, devnull, valids, pts, note, date):
@@ -59,6 +60,7 @@ class Challenge(FSSubModuleFiles):
 
         # Poor man's alternative to the real files gotten below
         self.files["name"] = fo.File("name", content = bytes(self.name) + "\n")
+        self.files["validations"] = fo.File("validations", content = bytes(self.valids) + "\n")
 
         if self.devnull:
             self.files["DevNull"] = DevNullFile("DevNull")
@@ -91,6 +93,18 @@ class Challenge(FSSubModuleFiles):
             self.name = match.group(1)
         self.files["name"] = fo.File("name", content = bytes(self.name + "\n"))
 
+        # Parse number of validations
+        # Note that self.valids is used to make the file "lastvalidation"
+        self.valids = None
+        for valids in content.xpath(u'.//*[contains(text(), "validation")]'):
+            validstxt = lxml.html.tostring(valids, encoding = 'utf-8', method = 'text')
+            match = self.validsre.match(validstxt)
+            if match is not None:
+                self.valids = int(match.group(1))
+                break
+        if self.valids is None:
+            self.valids = 0
+
         # Parse nickname and date of last validation
         if not self.devnull:
             [lastvalid] = content.xpath(u'.//*[contains(text(), "Dernière validation par")]')
@@ -102,6 +116,13 @@ class Challenge(FSSubModuleFiles):
             lastvalidation.stat.st_mtime = int(date.strftime("%s"))
             lastvalidation.stat.st_ctime = lastvalidation.stat.st_mtime
             self.files["lastvalidation"] = lastvalidation
+
+        # Make the "validations" file
+        validsfile = fo.File("validations", content = bytes(str(self.valids) + "\n"))
+        # Copy the last validation date from lastvalidation
+        validsfile.stat.st_mtime = lastvalidation.stat.st_mtime
+        validsfile.stat.st_ctime = validsfile.stat.st_mtime
+        self.files["validations"] = validsfile
 
         self.cacheexpir = now + self.cachelife
 
