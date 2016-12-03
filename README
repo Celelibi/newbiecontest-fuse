@@ -75,3 +75,6 @@ Fichiers
 
  * /challenges/<categorie>/<challenge>/validations
 	Ce fichier contient le nombre de validations pour cette épreuve.
+
+ * /challenges/<categorie>/<challenge>/points
+	Ce fichier contient le nombre de points que vaut une épreuve.

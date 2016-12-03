@@ -33,6 +33,7 @@ class Challenge(FSSubModuleFiles):
     namere = re.compile('(.*), par .*')
     lastvalidre = re.compile('Dernière validation par (.*), le (\d+/\d+/\d+ à \d+:\d+)')
     validsre = re.compile('(\d+) validation')
+    ptsre = re.compile('(\d+) point')
 
 
     def __init__(self, req, name, url, devnull, valids, pts, note, date):
@@ -61,6 +62,7 @@ class Challenge(FSSubModuleFiles):
         # Poor man's alternative to the real files gotten below
         self.files["name"] = fo.File("name", content = bytes(self.name) + "\n")
         self.files["validations"] = fo.File("validations", content = bytes(self.valids) + "\n")
+        self.files["points"] = fo.File("points", content = bytes(str(self.pts)) + "\n")
 
         if self.devnull:
             self.files["DevNull"] = DevNullFile("DevNull")
@@ -126,6 +128,17 @@ class Challenge(FSSubModuleFiles):
             validsfile.stat.st_mtime = lastvalidation.stat.st_mtime
             validsfile.stat.st_ctime = validsfile.stat.st_mtime
         self.files["validations"] = validsfile
+
+        # Parse the number of points
+        if not self.devnull:
+            # Some challenges are fucky
+            for points in content.xpath(u'.//*[contains(text(), "point")]'):
+                pts = lxml.html.tostring(points, encoding = 'utf-8', method = 'text')
+                match = self.ptsre.match(pts)
+                if match is not None:
+                    self.pts = int(match.group(1))
+            self.files["points"] = fo.File("points", content = bytes(str(self.pts)) + "\n")
+
 
         self.cacheexpir = now + self.cachelife
 
