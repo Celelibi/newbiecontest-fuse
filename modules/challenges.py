@@ -18,6 +18,14 @@ class UnAuthFile(fo.File):
 
 
 
+class DevNullFile(fo.File):
+    def __init__(self, name, **kwargs):
+        kwargs.setdefault('content', b"This challenge has been removed.\n")
+        super(DevNullFile, self).__init__(name, **kwargs)
+
+
+
+
 class Challenge(FSSubModuleFiles):
     cachelife = 60
     unauthcachelife = 3
@@ -50,6 +58,9 @@ class Challenge(FSSubModuleFiles):
         # Poor man's alternative to the real files gotten below
         self.files["name"] = fo.File("name", content = bytes(self.name) + "\n")
 
+        if self.devnull:
+            self.files["DevNull"] = DevNullFile("DevNull")
+
         try:
             res = self.req.get(self.url, True)
         except AuthException:
@@ -59,6 +70,15 @@ class Challenge(FSSubModuleFiles):
 
         doc = lxml.html.fromstring(res.content, base_url = res.url)
         [content] = doc.cssselect('div#content > div.textpad')
+
+        # Check if the challenge has been /dev/nulled
+        [img] = content.cssselect('img[alt="Validation"]')
+        self.devnull = (u"supprimée" in img.get('title'))
+        if self.devnull:
+            self.files["DevNull"] = DevNullFile("DevNull")
+        elif "DevNull" in self.files:
+            # Shouldn't happen
+            del self.files["DevNull"]
 
         # Parse the challenge name
         h2 = content.cssselect('h2')

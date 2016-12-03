@@ -63,3 +63,6 @@ Fichiers
 
  * /challenges/<categorie>/<challenge>/name
 	Ce fichier contient le nom de l'épreuve.
+
+ * /challenges/<categorie>/<challenge>/DevNull
+	Si ce fichier est présent, l'épreuve a été /dev/nullée.
