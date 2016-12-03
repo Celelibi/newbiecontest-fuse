@@ -37,12 +37,12 @@ class Challenge(FSSubModuleFiles):
     qualityre = re.compile('([0-9.]+) / 10')
 
 
-    def __init__(self, req, name, url, devnull, valids, pts, quality, date):
+    def __init__(self, req, name, url, status, valids, pts, quality, date):
         super(Challenge, self).__init__()
         self.req = req
         self.name = name
         self.url = url
-        self.devnull = devnull
+        self.status = status
         self.valids = valids
         self.pts = pts
         self.quality = quality
@@ -65,7 +65,7 @@ class Challenge(FSSubModuleFiles):
         self.files["validations"] = fo.File("validations", content = bytes(self.valids) + "\n")
         self.files["points"] = fo.File("points", content = bytes(str(self.pts)) + "\n")
 
-        if self.devnull:
+        if self.status == 'devnull':
             self.files["DevNull"] = DevNullFile("DevNull")
 
         try:
@@ -78,10 +78,19 @@ class Challenge(FSSubModuleFiles):
         doc = lxml.html.fromstring(res.content, base_url = res.url)
         [content] = doc.cssselect('div#content > div.textpad')
 
-        # Check if the challenge has been /dev/nulled
+        # Get the status of the challenge
         [img] = content.cssselect('img[alt="Validation"]')
-        self.devnull = (u"supprimée" in img.get('title'))
-        if self.devnull:
+        statustitle = img.get('title')
+        if u"supprimée" in statustitle:
+            self.status = 'devnull'
+        elif u"non validée" in statustitle:
+            self.status = 'nonvalid'
+        elif u"validée" in statustitle:
+            self.status = 'valid'
+        else:
+            self.status = 'unknown'
+
+        if self.status == 'devnull':
             self.files["DevNull"] = DevNullFile("DevNull")
         elif "DevNull" in self.files:
             # Shouldn't happen
@@ -109,7 +118,7 @@ class Challenge(FSSubModuleFiles):
             self.valids = 0
 
         # Parse nickname and date of last validation
-        if not self.devnull and self.valids > 0:
+        if not self.status == 'devnull' and self.valids > 0:
             [lastvalid] = content.xpath(u'.//*[contains(text(), "Dernière validation par")]')
             lastvalid = lxml.html.tostring(lastvalid, encoding = 'utf-8', method = 'text')
             match = self.lastvalidre.match(lastvalid)
@@ -131,7 +140,7 @@ class Challenge(FSSubModuleFiles):
         self.files["validations"] = validsfile
 
         # Parse the number of points
-        if not self.devnull:
+        if not self.status == 'devnull':
             # Some challenges are fucky
             for points in content.xpath(u'.//*[contains(text(), "point")]'):
                 pts = lxml.html.tostring(points, encoding = 'utf-8', method = 'text')
@@ -141,7 +150,7 @@ class Challenge(FSSubModuleFiles):
             self.files["points"] = fo.File("points", content = bytes(str(self.pts)) + "\n")
 
         # Parse quality
-        if not self.devnull:
+        if not self.status == 'devnull':
             [img] = content.cssselect('img[src *= "challs_ranks"]')
             self.quality = img.get('title')
             match = self.qualityre.match(self.quality)
@@ -204,7 +213,17 @@ class Category(FSSubModuleFiles):
             challname = lxml.html.tostring(link, encoding = 'utf-8', method = 'text')
             challname = challname.replace('/', '_')
             challurl = link.get('href')
-            devnull = (len(link.cssselect('.strike')) > 0)
+
+            # Parse validation status (validated, not validated, devnull)
+            [img] = tdvalids.cssselect('img')
+            statusimg = img.get('src')
+            status = 'unknown'
+            if 'nullvalide' in statusimg:
+                status = 'devnull'
+            elif 'nonvalide' in statusimg:
+                status = 'nonvalid'
+            elif 'valide' in statusimg:
+                status = 'valid'
 
             # Parse validations
             [script] = tdvalids.cssselect('script')
@@ -225,7 +244,7 @@ class Category(FSSubModuleFiles):
             date = time.mktime(date)
 
             self.dirmodules[challname] = Challenge(self.req, challname,
-                    challurl, devnull, validscnt, points, votes, date)
+                    challurl, status, validscnt, points, votes, date)
 
         self.nchalls = len(self.dirmodules)
         self.cacheexpir = now + self.cachelife
