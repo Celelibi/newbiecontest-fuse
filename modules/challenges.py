@@ -1,6 +1,7 @@
 # coding: utf-8
 
 import time
+import datetime
 import re
 import lxml.html
 
@@ -30,6 +31,7 @@ class Challenge(FSSubModuleFiles):
     cachelife = 60
     unauthcachelife = 3
     namere = re.compile('(.*), par .*')
+    lastvalidre = re.compile('Dernière validation par (.*), le (\d+/\d+/\d+ à \d+:\d+)')
 
 
     def __init__(self, req, name, url, devnull, valids, pts, note, date):
@@ -88,6 +90,18 @@ class Challenge(FSSubModuleFiles):
         if match is not None:
             self.name = match.group(1)
         self.files["name"] = fo.File("name", content = bytes(self.name + "\n"))
+
+        # Parse nickname and date of last validation
+        if not self.devnull:
+            [lastvalid] = content.xpath(u'.//*[contains(text(), "Dernière validation par")]')
+            lastvalid = lxml.html.tostring(lastvalid, encoding = 'utf-8', method = 'text')
+            match = self.lastvalidre.match(lastvalid)
+            (lastvalidname, lastvaliddate) = match.groups()
+            date = datetime.datetime.strptime(lastvaliddate, "%d/%m/%Y à %H:%M")
+            lastvalidation = fo.File("lastvalidation", content = bytes(lastvalidname + "\n"))
+            lastvalidation.stat.st_mtime = int(date.strftime("%s"))
+            lastvalidation.stat.st_ctime = lastvalidation.stat.st_mtime
+            self.files["lastvalidation"] = lastvalidation
 
         self.cacheexpir = now + self.cachelife
 
