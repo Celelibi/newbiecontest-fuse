@@ -64,8 +64,14 @@ Fichiers
  * /challenges/<categorie>/<challenge>/name
 	Ce fichier contient le nom de l'épreuve.
 
- * /challenges/<categorie>/<challenge>/DevNull
-	Si ce fichier est présent, l'épreuve a été /dev/nullée.
+ * /challenges/<categorie>/<challenge>/status
+	Ce fichier contient l'une des 3 chaînes de caractères suivantes :
+	- devnull
+		si l'épreuve est supprimée ;
+	- nonvalid
+		si l'épreuve n'a pas été validée avec le compte actuel ;
+	- valid
+		si l'épreuve a été validée avec le compte actuel.
 
  * /challenges/<categorie>/<challenge>/lastvalidation
 	Ce fichier contient le pseudo de la dernière personne à avoir validé
