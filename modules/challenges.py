@@ -106,7 +106,7 @@ class Challenge(FSSubModuleFiles):
             self.valids = 0
 
         # Parse nickname and date of last validation
-        if not self.devnull:
+        if not self.devnull and self.valids > 0:
             [lastvalid] = content.xpath(u'.//*[contains(text(), "Dernière validation par")]')
             lastvalid = lxml.html.tostring(lastvalid, encoding = 'utf-8', method = 'text')
             match = self.lastvalidre.match(lastvalid)
@@ -116,12 +116,15 @@ class Challenge(FSSubModuleFiles):
             lastvalidation.stat.st_mtime = int(date.strftime("%s"))
             lastvalidation.stat.st_ctime = lastvalidation.stat.st_mtime
             self.files["lastvalidation"] = lastvalidation
+        else:
+            lastvalidation = None
 
         # Make the "validations" file
         validsfile = fo.File("validations", content = bytes(str(self.valids) + "\n"))
-        # Copy the last validation date from lastvalidation
-        validsfile.stat.st_mtime = lastvalidation.stat.st_mtime
-        validsfile.stat.st_ctime = validsfile.stat.st_mtime
+        # Copy the last validation date from lastvalidation if it exists
+        if lastvalidation is not None:
+            validsfile.stat.st_mtime = lastvalidation.stat.st_mtime
+            validsfile.stat.st_ctime = validsfile.stat.st_mtime
         self.files["validations"] = validsfile
 
         self.cacheexpir = now + self.cachelife
