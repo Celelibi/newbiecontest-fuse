@@ -81,3 +81,7 @@ Fichiers
 
  * /challenges/<categorie>/<challenge>/quality
 	Ce fichier contient la note attribuée à cette épreuve.
+
+ * /challenges/<categorie>/<challenge>/helpurl
+	Ce fichier contient l'URL du topic d'aide du forum pour cette épreuve.
+	Ce fichier n'est présent que si l'authentification a réussi.

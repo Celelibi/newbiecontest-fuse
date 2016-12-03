@@ -148,6 +148,12 @@ class Challenge(FSSubModuleFiles):
             self.quality = float(match.group(1))
             self.files["quality"] = fo.File("quality", content = bytes(str(self.quality)) + "\n")
 
+        # Parse help url
+        [link] = content.xpath('.//a[img/@alt="Aide"]')
+        self.helpurl = link.get('href')
+        self.helpurl = self.req.fullurl(self.helpurl)
+        self.files["helpurl"] = fo.File("helpurl", content = bytes(self.helpurl + "\n"))
+
 
         self.cacheexpir = now + self.cachelife
 
