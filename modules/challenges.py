@@ -173,6 +173,10 @@ class Challenge(FSSubModuleFiles):
                 if len(content2) > 0 and content2[-1].tag == 'hr':
                     content2.remove(content2[-1])
 
+        # Put the full HTML of the challenge in a file
+        self.deschtml = lxml.html.tostring(content2)
+        self.files["description.html"] = fo.File("description.html", content = bytes(self.deschtml + "\n"))
+
         content2.make_links_absolute()
         try:
             import html2text
