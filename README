@@ -106,3 +106,9 @@ Fichiers
 	Le HTML ayant été converti, certaines épreuves peuvent ne pas être
 	résolvables avec uniquement ce fichier. Ce fichier n'est présent que si
 	l'authentification a réussi.
+
+ * /challenges/<categorie>/<challenge>/summary
+	Ce fichier contient un résumé de l'épreuve. Une compilation des
+	informations utiles et réparties dans les différent fichiers
+	sus-mentionnés. Ce fichier n'est présent que si l'authentification a
+	réussi.

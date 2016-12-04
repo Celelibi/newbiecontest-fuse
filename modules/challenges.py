@@ -59,6 +59,24 @@ class Challenge(FSSubModuleFiles):
         self.files["validations"] = fo.File("validations", content = bytes(self.valids) + "\n")
         self.files["points"] = fo.File("points", content = bytes(str(self.pts)) + "\n")
 
+        summary = "name: " + self.name + "\n"
+        if self.status == 'devnull':
+            summary += "status: /dev/null\n"
+        elif self.status == 'nonvalid':
+            summary += "status: Not validated\n"
+        elif self.status == 'valid':
+            summary += "status: Validated\n"
+        else:
+            summary += "status: Unknown\n"
+
+        summary += "creation date: "
+        summary += time.strftime("%Y/%m/%d", time.localtime(self.date))
+        summary += "\n"
+        summary += "challenge url: " + self.req.fullurl(self.url) + "\n"
+        summary += "validation count: " + str(self.valids) + "\n"
+        summary += "quality: " + str(self.quality) + " / 10\n"
+        self.files["summary"] = fo.File("summary", content = bytes(summary))
+
         try:
             res = self.req.get(self.url, True)
         except AuthException:
@@ -186,6 +204,31 @@ class Challenge(FSSubModuleFiles):
             self.desc = lxml.html.tostring(content2, encoding = 'utf-8', method = 'text')
 
         self.files["description"] = fo.File("description", content = bytes(self.desc + "\n"))
+
+        # Generate a challenge summary
+        summary = "name: " + self.name + "\n"
+
+        if self.author is not None:
+            summary += "author: " + self.author + "\n"
+
+        if self.status == 'devnull':
+            summary += "status: /dev/null\n"
+        elif self.status == 'nonvalid':
+            summary += "status: Not validated\n"
+        elif self.status == 'valid':
+            summary += "status: Validated\n"
+        else:
+            summary += "status: Unknown\n"
+
+        summary += "creation date: "
+        summary += time.strftime("%Y/%m/%d", time.localtime(self.date))
+        summary += "\n"
+        summary += "challenge url: " + self.req.fullurl(self.url) + "\n"
+        summary += "help url: " + self.helpurl + "\n"
+        summary += "validation count: " + str(self.valids) + "\n"
+        summary += "quality: " + str(self.quality) + " / 10\n"
+        summary += "content:\n" + self.desc + "\n"
+        self.files["summary"] = fo.File("summary", content = bytes(summary))
 
 
         self.cacheexpir = now + self.cachelife
