@@ -1,5 +1,6 @@
 # coding: utf-8
 
+import errno
 import copy
 import time
 import datetime
@@ -17,6 +18,35 @@ class UnAuthFile(fo.File):
         kwargs.setdefault('content', b"You are not authenticated !\n")
         super(UnAuthFile, self).__init__(name, **kwargs)
 
+
+
+class VoteFile(fo.File):
+    def __init__(self, name, chall, **kwargs):
+        kwargs.setdefault('isWritable', True)
+        super(VoteFile, self).__init__(name, **kwargs)
+        self.chall = chall
+
+    def write(self, buf, offset):
+        length = len(buf)
+        try:
+            val = int(buf)
+            if val < 0 or val > 10:
+                return -errno.EINVAL
+        except ValueError:
+            val = buf.strip()
+            if val != 'nothing':
+                return -errno.EINVAL
+
+        ret = self.chall.send_vote(val)
+        if ret is not None:
+            return ret
+
+        self.content = str(val) + "\n"
+        return length
+
+    def truncate(path, length):
+        # Never truncate
+        return
 
 
 
@@ -214,6 +244,14 @@ class Challenge(FSSubModuleFiles):
 
         self.files["description"] = fo.File("description", content = bytes(self.desc + "\n"))
 
+        # Parse the vote
+        if self.status == 'valid':
+            [form] = content.cssselect('form[name *= "polling"]')
+            self.voteurl = form.get('action')
+            [option] = form.cssselect('option[selected]')
+            self.vote = option.get('value')
+            self.files["vote"] = VoteFile("vote", self, content = bytes(self.vote + "\n"))
+
         # Generate a challenge summary
         summary = "name: " + self.name + "\n"
 
@@ -238,6 +276,8 @@ class Challenge(FSSubModuleFiles):
             summary += "afterwards url: " + self.afterurl + "\n"
         summary += "validation count: " + str(self.valids) + "\n"
         summary += "quality: " + str(self.quality) + " / 10\n"
+        if self.vote != 'nothing':
+            summary += "vote: " + str(self.vote) + " / 10\n"
         summary += "content:\n" + self.desc + "\n"
         self.files["summary"] = fo.File("summary", content = bytes(summary))
 
@@ -247,6 +287,22 @@ class Challenge(FSSubModuleFiles):
 
     def getndirs(self):
         return 0
+
+
+    def send_vote(self, vote):
+        vote = str(vote)
+        res = self.req.post(self.voteurl, data = {'note': vote})
+        doc = lxml.html.fromstring(res.content, base_url = res.url)
+        [content] = doc.cssselect('div#content > div.textpad')
+        [h2] = content.cssselect('h2')
+        msg = lxml.html.tostring(h2, encoding = 'utf-8', method = 'text')
+        msg = msg.strip().lower()
+        if msg.startswith("merci"):
+            return None
+        if msg.startswith("erreur"):
+            return -errno.EINVAL
+        # I dunno, LOL. ¯\_(ツ)_/¯
+        return -errno.EIO
 
 
 

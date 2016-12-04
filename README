@@ -88,6 +88,12 @@ Fichiers
  * /challenges/<categorie>/<challenge>/quality
 	Ce fichier contient la note attribuée à cette épreuve.
 
+ * /challenges/<categorie>/<challenge>/vote
+	Ce fichier contient le vote pour la qualité de l'épreuve. Ce fichier
+	est accessible en lecture et écriture. Lorsqu'il est écrit, le vote est
+	envoyé. Il n'apparaît que lorsque l'épreuve a été validée par le compte
+	actuel.
+
  * /challenges/<categorie>/<challenge>/helpurl
 	Ce fichier contient l'URL du topic d'aide du forum pour cette épreuve.
 	Ce fichier n'est présent que si l'authentification a réussi.
