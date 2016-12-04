@@ -176,6 +176,15 @@ class Challenge(FSSubModuleFiles):
         self.helpurl = self.req.fullurl(self.helpurl)
         self.files["helpurl"] = fo.File("helpurl", content = bytes(self.helpurl + "\n"))
 
+        # Parse afterwards url (if any)
+        if self.status == 'valid':
+            [link] = content.xpath('.//a[img/@alt="Afterwards"]')
+            self.afterurl = link.get('href')
+            self.afterurl = self.req.fullurl(self.afterurl)
+            self.files["afterwardsurl"] = fo.File("afterwardsurl", content = bytes(self.afterurl + "\n"))
+        else:
+            self.afterurl = None
+
         # Parse the challenge description
         content2 = copy.deepcopy(content)
         # Remove everything up to (and including) the first <h2> element
@@ -225,6 +234,8 @@ class Challenge(FSSubModuleFiles):
         summary += "\n"
         summary += "challenge url: " + self.req.fullurl(self.url) + "\n"
         summary += "help url: " + self.helpurl + "\n"
+        if self.afterurl is not None:
+            summary += "afterwards url: " + self.afterurl + "\n"
         summary += "validation count: " + str(self.valids) + "\n"
         summary += "quality: " + str(self.quality) + " / 10\n"
         summary += "content:\n" + self.desc + "\n"

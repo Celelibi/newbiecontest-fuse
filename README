@@ -92,6 +92,12 @@ Fichiers
 	Ce fichier contient l'URL du topic d'aide du forum pour cette épreuve.
 	Ce fichier n'est présent que si l'authentification a réussi.
 
+ * /challenges/<categorie>/<challenge>/afterwardsurl
+	Ce fichier contient l'URL du topic d'afterwards du forum pour cette
+	épreuve. Accessible uniquement à ceux ayant réussi l'épreuve. Ce
+	fichier n'est présent que si l'authentification a réussi et que
+	l'épreuve a été validée.
+
  * /challenges/<categorie>/<challenge>/author
 	Ce fichier contient le pseudo de l'auteur de l'épreuve. Ce fichier
 	n'est présent que si l'authentification a réussi et que l'auteur de
