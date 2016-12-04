@@ -96,3 +96,9 @@ Fichiers
 	Ce fichier contient le pseudo de l'auteur de l'épreuve. Ce fichier
 	n'est présent que si l'authentification a réussi et que l'auteur de
 	l'épreuve est connu.
+
+ * /challenges/<categorie>/<challenge>/description
+	Ce fichier contient la description de l'épreuve. Le HTML ayant été
+	converti en texte, certaines épreuves peuvent ne pas être résolvables
+	avec uniquement ce fichier. Ce fichier n'est présent que si
+	l'authentification a réussi.

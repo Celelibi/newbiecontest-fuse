@@ -1,5 +1,6 @@
 # coding: utf-8
 
+import copy
 import time
 import datetime
 import re
@@ -156,6 +157,31 @@ class Challenge(FSSubModuleFiles):
         self.helpurl = link.get('href')
         self.helpurl = self.req.fullurl(self.helpurl)
         self.files["helpurl"] = fo.File("helpurl", content = bytes(self.helpurl + "\n"))
+
+        # Parse the challenge description
+        content2 = copy.deepcopy(content)
+        # Remove everything up to (and including) the first <h2> element
+        while len(content2) > 0 and content2[0].tag != 'h2':
+            content2.remove(content2[0])
+        if len(content2) > 0 and content2[0].tag == 'h2':
+            content2.remove(content2[0])
+        # Remove the end up to the second last <hr> if the challenged is not /dev/nulled
+        if self.status != 'devnull':
+            for _ in range(2):
+                while len(content2) > 0 and content2[-1].tag != 'hr':
+                    content2.remove(content2[-1])
+                if len(content2) > 0 and content2[-1].tag == 'hr':
+                    content2.remove(content2[-1])
+
+        content2.make_links_absolute()
+        try:
+            import html2text
+            htmlcontent = lxml.html.tostring(content2, method = 'html')
+            self.desc = html2text.html2text(htmlcontent).encode('utf-8')
+        except ImportError:
+            self.desc = lxml.html.tostring(content2, encoding = 'utf-8', method = 'text')
+
+        self.files["description"] = fo.File("description", content = bytes(self.desc + "\n"))
 
 
         self.cacheexpir = now + self.cachelife
